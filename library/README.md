@@ -32,3 +32,9 @@ Latest/development library from GitHub:
 There are many examples to get you started with your Inventor HAT Mini. With the library installed on your Raspberry Pi, these can be found in the `~/Pimoroni/inventorhatmini/examples` directory. Details about what each one does can be found in the [examples readme](/examples/README.md).
 
 To take Inventor HAT Mini further, the full API is described in the [library readme](/library/inventorhatmini/README.md)
+
+# Changelog
+0.0.1
+-----
+
+* Initial Release
