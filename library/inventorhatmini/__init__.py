@@ -335,6 +335,232 @@ class Motor():
             self.motor_mode = mode
             self.__apply_duty(self.state.get_deadzoned_duty(), self.motor_mode)
 
+class Calibration():
+    ANGULAR = 0
+    LINEAR = 1
+    CONTINUOUS = 2
+
+    def __init__(self, default_type=None):
+        pass
+
+    def apply_blank_pairs(self, size):
+        if size < 0:
+            raise ValueError("size out of range. Expected 0 or greater")
+        
+        if calibration is not None:
+            calibration = None
+
+        if size > 0:
+            calibration = new Pair[size]
+            calibration_size = size
+        else:
+            calibration = None
+            calibration_size = 0
+
+    def apply_two_pairs(self, min_pulse, max_pulse, min_value, max_value):
+        apply_blank_pairs(2)
+        calibration[0] = Pair(min_pulse, min_value)
+        calibration[1] = Pair(max_pulse, max_value)
+
+    def apply_three_pairs(self, min_pulse, mid_pulse, max_pulse, min_value, mid_value, max_value):
+        apply_blank_pairs(3)
+        calibration[0] = Pair(min_pulse, min_value)
+        calibration[1] = Pair(mid_pulse, mid_value)
+        calibration[2] = Pair(max_pulse, max_value)
+
+    def apply_uniform_pairs(self, size, min_pulse, max_pulse, min_value, max_value):
+        apply_blank_pairs(size)
+        if size > 0:
+            size_minus_one = size - 1
+            for i in range(0, size):
+                pulse = Calibration.map_float(i, 0.0, size_minus_one, min_pulse, max_pulse)
+                value = Calibration.map_float(i, 0.0, size_minus_one, min_value, max_value)
+                calibration[i] = Pair(pulse, value)
+
+    def apply_default_pairs(self, default_type):
+        if default_type == ANGULAR:
+            apply_three_pairs(DEFAULT_MIN_PULSE, DEFAULT_MID_PULSE, DEFAULT_MAX_PULSE,
+                              -90.0,             0.0,               +90.0)
+
+        elif default_type == LINEAR:
+            apply_two_pairs(DEFAULT_MIN_PULSE, DEFAULT_MAX_PULSE,
+                            0.0,               1.0)
+
+        elif default_type == CONTINUOUS:
+            apply_three_pairs(DEFAULT_MIN_PULSE, DEFAULT_MID_PULSE, DEFAULT_MAX_PULSE,
+                              -1.0,              0.0,               +1.0)
+
+    def size(self):
+        return calibration_size
+
+    def pair(self, index, pair=None):  # Ensure the pairs are assigned in ascending value order
+        if pair is None:
+            return calibration[index]
+        else:
+            calibration[index] = pair
+
+    def pulse(self, index, pulse=None):
+        if pulse is None:
+            return calibration[index].pulse
+        else:
+            calibration[index].pulse = pulse
+
+    def value(self, index, value=None):
+        if value is None:
+            return calibration[index].value
+        else:
+            calibration[index].value = value
+
+    def first(self, pair=None):
+        if pair is None:
+            return calibration[0]
+        else:
+            calibration[0] = pair
+
+    def first_pulse(self, pulse=None):
+        if pulse is None:
+            return calibration[0].pulse
+        else:
+            calibration[0].pulse = pulse
+
+    def first_value(self, value=None):
+        if value is None:
+            return calibration[0].value
+        else:
+            calibration[0].value = value
+
+    def last(self, pair=None):
+        if pair is None:
+            return calibration[calibration_size - 1]
+        else:
+            calibration[calibration_size - 1] = pair
+
+    def last_pulse(self, pulse=None):
+        if pulse is None:
+            return calibration[calibration_size - 1].pulse
+        else:
+            calibration[calibration_size - 1].pulse = pulse
+
+    def last_value(self, value=None):
+        if value is None:
+            return calibration[calibration_size - 1].value
+        else:
+            calibration[calibration_size - 1] = value
+
+    def has_lower_limit(self):
+        return limit_lower
+
+    def has_upper_limit(self):
+        return limit_upper
+
+    def limit_to_calibration(self, lower, upper):
+        limit_lower = lower
+        limit_upper = upper
+
+    def value_to_pulse(self, value):
+        success = false
+        if calibration_size >= 2:
+            last = calibration_size - 1
+
+            value_out = value
+
+            # Is the value below the bottom most calibration pair?
+            if value < calibration[0].value:
+                # Should the value be limited to the calibration or projected below it?
+                if limit_lower:
+                    pulse_out = calibration[0].pulse
+                    value_out = calibration[0].value
+                else:
+                    pulse_out = map_float(value, calibration[0].value, calibration[1].value,
+                                                 calibration[0].pulse, calibration[1].pulse)
+            # Is the value above the top most calibration pair?
+            elif value > calibration[last].value:
+                # Should the value be limited to the calibration or projected above it?
+                if limit_upper:
+                    pulse_out = calibration[last].pulse
+                    value_out = calibration[last].value
+                else:
+                    pulse_out = map_float(value, calibration[last - 1].value, calibration[last].value,
+                                                 calibration[last - 1].pulse, calibration[last].pulse)
+            else:
+                # The value must between two calibration pairs, so iterate through them to find which ones
+                for i in range(last):
+                    if value <= calibration[i + 1].value:
+                        pulse_out = map_float(value, calibration[i].value, calibration[i + 1].value,
+                                                     calibration[i].pulse, calibration[i + 1].pulse)
+                        break  # No need to continue checking so break out of the loop
+
+            # Clamp the pulse between the hard limits
+            if pulse_out < LOWER_HARD_LIMIT or pulse_out > UPPER_HARD_LIMIT:
+                pulse_out = min(max(pulse_out, LOWER_HARD_LIMIT), UPPER_HARD_LIMIT)
+
+                # Is the pulse below the bottom most calibration pair?
+                if pulse_out < calibration[0].pulse:
+                    value_out = map_float(pulse_out, calibration[0].pulse, calibration[1].pulse,
+                                                     calibration[0].value, calibration[1].value)
+
+                # Is the pulse above the top most calibration pair?
+                elif pulse_out > calibration[last].pulse:
+                    value_out = map_float(pulse_out, calibration[last - 1].pulse, calibration[last].pulse,
+                                                     calibration[last - 1].value, calibration[last].value)
+
+                else:
+                    # The pulse must between two calibration pairs, so iterate through them to find which ones
+                    for i in range(last):
+                        if pulse_out <= calibration[i + 1].pulse:
+                            value_out = map_float(pulse_out, calibration[i].pulse, calibration[i + 1].pulse,
+                                                             calibration[i].value, calibration[i + 1].value)
+                            break  # No need to continue checking so break out of the loop
+
+            success = True
+
+        return success
+
+    def pulse_to_value(self, pulse):
+        success = False
+        if calibration_size >= 2:
+            last = calibration_size - 1
+
+            # Clamp the pulse between the hard limits
+            pulse_out = min(max(pulse, LOWER_HARD_LIMIT), UPPER_HARD_LIMIT)
+
+            # Is the pulse below the bottom most calibration pair?
+            if pulse_out < calibration[0].pulse:
+                # Should the pulse be limited to the calibration or projected below it?
+                if limit_lower:
+                    value_out = calibration[0].value
+                    pulse_out = calibration[0].pulse
+                else:
+                    value_out = map_float(pulse, calibration[0].pulse, calibration[1].pulse,
+                                                 calibration[0].value, calibration[1].value)
+
+            # Is the pulse above the top most calibration pair?
+            elif pulse > calibration[last].pulse:
+                # Should the pulse be limited to the calibration or projected above it?
+                if limit_upper:
+                    value_out = calibration[last].value
+                    pulse_out = calibration[last].pulse
+                else:
+                    value_out = map_float(pulse, calibration[last - 1].pulse, calibration[last].pulse,
+                                                 calibration[last - 1].value, calibration[last].value)
+            else:
+                # The pulse must between two calibration pairs, so iterate through them to find which ones
+                for i in range(last):
+                    if pulse <= calibration[i + 1].pulse:
+                        value_out = map_float(pulse, calibration[i].pulse, calibration[i + 1].pulse,
+                                                     calibration[i].value, calibration[i + 1].value)
+                        break  # No need to continue checking so break out of the loop
+
+            success = True
+
+        return success
+
+    def map_float(input, in_min, in_max, out_min, out_max):
+        return (((input - in_min) * (out_max - out_min)) / (in_max - in_min)) + out_min
+
+
+class ServoState():
+
 class Servo():
     def __init__(self, ioexpander, pin, load=True):
         self.__ioe.set_mode(pin, io.PWM)
