@@ -7,6 +7,7 @@ from rpi_ws281x import PixelStrip, Color
 import atexit
 import ioexpander as io
 from inventorhatmini.errors import *
+import sys
 
 __version__ = '0.0.1'
 
@@ -42,18 +43,315 @@ NUM_ADCS = 4
 NUM_LEDS = 8
 
 
+FAST_DECAY = 0  # aka 'Coasting'
+SLOW_DECAY = 1  # aka 'Braking'
+
+NORMAL_DIR = 0
+REVERSED_DIR = 1
+
+def clamp(n, smallest, largest):
+    return max(smallest, min(n, largest))
+
+class MotorState():
+    DEFAULT_SPEED_SCALE = 1.0  # The standard motor speed scale
+    DEFAULT_ZEROPOINT = 0.0  # The standard motor zeropoint
+    DEFAULT_DEADZONE = 0.05 # The standard motor deadzone
+
+    DEFAULT_DECAY_MODE = SLOW_DECAY  # The standard motor decay behaviour
+    DEFAULT_FREQUENCY = 25000.0  # The standard motor update rate
+    MIN_FREQUENCY = 10.0
+    MAX_FREQUENCY = 400000.0
+
+    ZERO_PERCENT = 0.0
+    ONEHUNDRED_PERCENT = 1.0
+
+
+    def __init__(self, direction=NORMAL_DIR, speed_scale=DEFAULT_SPEED_SCALE, zeropoint=DEFAULT_ZEROPOINT, deadzone=DEFAULT_DEADZONE):
+        self.motor_speed = 0.0
+        self.last_enabled_duty = 0.0
+        self.enabled = False
+
+        self.motor_direction = direction
+        self.motor_scale = max(speed_scale, sys.float_info.epsilon)
+        self.motor_zeropoint = clamp(zeropoint, 0.0, 1.0 - sys.float_info.epsilon)
+        self.motor_deadzone = clamp(deadzone, 0.0, 1.0)
+
+    def enable_with_return(self):
+        self.enabled = True
+        return self.get_deadzoned_duty()
+
+    def disable_with_return(self):
+        self.enabled = False
+        return None
+
+    def is_enabled(self):
+        return self.enabled
+
+    def get_duty(self):
+        if self.motor_direction == NORMAL_DIR:
+            return self.last_enabled_duty
+        else:
+            return 0.0 - self.last_enabled_duty
+
+    def get_deadzoned_duty(self):
+        duty = 0.0
+        if self.last_enabled_duty <= 0.0 - self.motor_deadzone or self.last_enabled_duty >= self.motor_deadzone:
+            duty = self.last_enabled_duty
+
+        if self.enabled:
+            return duty
+        else:
+            return None
+
+    def set_duty_with_return(self, duty):
+        # Invert provided speed if the motor direction is reversed
+        if self.motor_direction == REVERSED_DIR:
+            duty = 0.0 - duty
+
+        # Clamp the duty between the hard limits
+        self.last_enabled_duty = clamp(duty, -1.0, 1.0)
+
+        # Calculate the corresponding speed
+        self.motor_speed = MotorState.__duty_to_speed(self.last_enabled_duty, self.motor_zeropoint, self.motor_scale)
+
+        return self.enable_with_return()
+
+    def get_speed(self):
+        if self.motor_direction == NORMAL_DIR:
+            return self.motor_speed
+        else:
+            return 0.0 - self.motor_speed
+
+    def set_speed_with_return(self, speed):
+        # Invert provided speed if the motor direction is reversed
+        if self.motor_direction == REVERSED_DIR:
+            speed = 0.0 - speed
+
+        # Clamp the speed between the hard limits
+        self.motor_speed = clamp(speed, 0.0 - self.motor_scale, self.motor_scale)
+
+        # Calculate the corresponding duty cycle
+        self.last_enabled_duty = MotorState.__speed_to_duty(self.motor_speed, self.motor_zeropoint, self.motor_scale)
+
+        return self.enable_with_return()
+
+    def stop_with_return(self):
+        return self.set_duty_with_return(0.0)
+
+    def full_negative_with_return(self):
+        return self.set_duty_with_return(-1.0)
+
+    def full_positive_with_return(self):
+        return self.set_duty_with_return(1.0)
+
+    def to_percent_with_return(self, input, in_min=ZERO_PERCENT, in_max=ONEHUNDRED_PERCENT, speed_min=None, speed_max=None):
+        if speed_min is None:
+            speed_min = 0.0 - self.motor_scale
+        if speed_max is None:
+            speed_max = self.motor_scale
+
+        speed = MotorState.map_float(input, in_min, in_max, speed_min, speed_max)
+        return set_speed_with_return(speed)
+
+    def get_direction(self):
+        return self.motor_direction
+
+    def set_direction(self, direction):
+        self.motor_direction = direction
+
+    def get_speed_scale(self):
+        return self.motor_scale
+
+    def set_speed_scale(self, speed_scale):
+        self.motor_scale = max(speed_scale, sys.float_info.epsilon)
+        self.motor_speed = MotorState.__duty_to_speed(self.last_enabled_duty, self.motor_zeropoint, self.motor_scale)
+
+    def get_zeropoint(self):
+        return self.motor_zeropoint
+
+    def set_zeropoint(self, zeropoint):
+        self.motor_zeropoint = clamp(zeropoint, 0.0, 1.0 - sys.float_info.epsilon)
+        self.motor_speed = MotorState.__duty_to_speed(self.last_enabled_duty, self.motor_zeropoint, self.motor_scale)
+
+    def get_deadzone(self):
+        return self.motor_deadzone
+
+    def set_deadzone_with_return(self, deadzone):
+        self.motor_deadzone = clamp(deadzone, 0.0, 1.0)
+        return get_deadzoned_duty()
+
+    def duty_to_level(duty, resolution):
+        return int(duty * resolution)
+
+    def map_float(input, in_min, in_max, out_min, out_max):
+        return (((input - in_min) * (out_max - out_min)) / (in_max - in_min)) + out_min
+
+    def __duty_to_speed(duty, zeropoint, scale):
+        speed = 0.0
+        if duty > zeropoint:
+            speed = MotorState.map_float(duty, zeropoint, 1.0, 0.0, scale)
+        elif duty < -zeropoint:
+            speed = map_float(duty, -zeropoint, -1.0, 0.0, -scale)
+        return speed
+
+    def __speed_to_duty(speed, zeropoint, scale):
+        duty = 0.0
+        if speed > 0.0:
+            duty = map_float(speed, 0.0, scale, zeropoint, 1.0)
+        elif speed < 0.0:
+            duty = map_float(speed, 0.0, -scale, -zeropoint, -1.0)
+        return duty
+
+
+class Motor():
+
+    def __apply_duty(self, duty, mode):
+        if duty is not None:
+            signed_level = MotorState.duty_to_level(duty, self.pwm_period)
+
+            if mode == SLOW_DECAY:  # aka 'Braking'
+                if signed_level >= 0:
+                    self.ioe.output(self.pin_p, self.pwm_period, load=False)
+                    self.ioe.output(self.pin_n, self.pwm_period - signed_level, load=True)
+                else:
+                    self.ioe.output(self.pin_p, self.pwm_period + signed_level, load=False)
+                    self.ioe.output(self.pin_n, self.pwm_period, load=True)
+
+            elif mode == FAST_DECAY:  # aka 'Coasting'
+                if signed_level >= 0:
+                    self.ioe.output(self.pin_p, signed_level, load=False)
+                    self.ioe.output(self.pin_n, 0, load=True)
+                else:
+                    self.ioe.output(self.pin_p, 0, load=False)
+                    self.ioe.output(self.pin_n, 0 - signed_level, load=True)
+
+        else:
+            self.ioe.output(self.pin_p, 0)
+            self.ioe.output(self.pin_n, 0)
+
+    def __init__(self, ioe, pin_p, pin_n, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
+        deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
+
+        self.ioe = ioe
+
+        self.pin_p = pin_p
+        self.pin_n = pin_n
+
+        self.state = MotorState(direction, speed_scale, zeropoint, deadzone)
+
+        self.pwm_frequency = freq
+        self.motor_mode = mode
+
+
+        self.pin_p_mod = self.ioe.get_pwm_module(pin_p)
+        self.pin_n_mod = self.ioe.get_pwm_module(pin_n)
+        if self.pin_p_mod != self.pin_n_mod:
+            raise ValueError("Both motor pins must be on the same PWM module!")
+
+        self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=False)
+
+        ioe.set_mode(pin_p, io.PWM)
+        ioe.set_mode(pin_n, io.PWM)
+        ioe.output(pin_p, 0, load=False)
+        ioe.output(pin_n, 0, load=True)
+
+    def enable(self):
+        self.__apply_duty(self.state.enable_with_return(), self.motor_mode)
+
+    def disable(self):
+        self.__apply_duty(self.state.disable_with_return(), self.motor_mode)
+
+    def is_enabled(self):
+        return self.state.is_enabled()
+
+    def duty(self, duty=None):
+        if duty is None:
+            return self.state.get_duty()
+        else:
+            self.__apply_duty(self.set_duty_with_return(duty), self.motor_mode)
+
+    def speed(self, speed=None):
+        if speed is None:
+            return self.state.get_speed()
+        else:
+            self.__apply_duty(self.set_speed_with_return(speed), self.motor_mode)
+
+    def frequency(self, freq=None):
+        if freq is None:
+            return self.pwm_frequency
+        else:
+            if (freq >= MotorState.MIN_FREQUENCY) and (freq <= MotorState.MAX_FREQUENCY):
+                self.__apply_duty(self.state.get_deadzoned_duty(), self.motor_mode)
+                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, pin_p_mod, load=True)
+            else:
+                raise ValueError(f"freq out of range. Expected {MotorState.MIN_FREQUENCY} to {MotorState.MAX_FREQUENCY}")
+
+    def stop(self):
+        self.__apply_duty(self.state.stop_with_return(), self.motor_mode)
+
+    def coast(self):
+        self.__apply_duty(self.state.stop_with_return(), FAST_DECAY)
+
+    def brake(self):
+        self.__apply_duty(self.state.stop_with_return(), SLOW_DECAY)
+
+    def full_negative(self):
+        self.__apply_duty(self.state.full_negative_with_return(), self.motor_mode)
+
+    def full_positive(self):
+        self.__apply_duty(self.state.full_positive_with_return(), self.motor_mode)
+
+    def to_percent(self, input, in_min=MotorState.ZERO_PERCENT, in_max=MotorState.ONEHUNDRED_PERCENT, speed_min=None, speed_max=None):
+        self.__apply_duty(self.state.to_percent_with_return(input, in_min, in_max, speed_min, speed_max), motor_mode)
+
+    def direction(self, direction=None):
+        if direction is None:
+            return self.state.get_direction()
+        else:
+            self.set_direction(direction)
+
+    def speed_scale(self, speed_scale=None):
+        if speed_scale is None:
+            return self.state.get_speed_scale()
+        else:
+            self.set_speed_scale(speed_scale)
+
+    def zeropoint(self, zeropoint=None):
+        if zeropoint is None:
+            return self.state.get_zeropoint()
+        else:
+            self.set_zeropoint(zeropoint)
+
+    def deadzone(self, deadzone=None):
+        if deadzone is None:
+            return self.state.get_deadzone()
+        else:
+            self.__apply_duty(self.state.set_deadzone_with_return(deadzone), self.motor_mode)
+
+    def decay_mode(self, mode=None):
+        if mode is None:
+            return self.motor_mode
+        else:
+            self.motor_mode = mode
+            self.__apply_duty(self.state.get_deadzoned_duty(), self.motor_mode)
+
+class Servo():
+    def __init__(self, ioexpander, pin, load=True):
+        self.__ioe.set_mode(pin, io.PWM)
+        self.__ioe.output(pin, 0, load=load)
+
 class InventorHATMini():
     # I2C pins
     PI_I2C_SDA_PIN = 2
     PI_I2C_SCL_PIN = 3
     PI_I2C_INT_PIN = 4
-    
+
     # WS2812 pin
     PI_LED_DATA_PIN = 12
-    
+
     # I2S Audio pins
     PI_AMP_EN_PIN = 25
-    
+
     # User switch pin
     PI_USER_SW_PIN = 26
     
@@ -68,7 +366,7 @@ class InventorHATMini():
     # IOE_MOTOR_FAULT_PIN = ?
     IOE_MOTOR_A_PINS = (20, 19)
     IOE_MOTOR_B_PINS = (16, 15)
-    
+
     # Expander motor encoder pins
     IOE_ENCODER_A_PINS = (4, 3)
     IOE_ENCODER_B_PINS = (1, 26)
@@ -84,7 +382,7 @@ class InventorHATMini():
     IOE_ADC_2_PIN = 13
     IOE_ADC_3_PIN = 9
     IOE_ADC_4_PIN = 10
-    
+
     LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
     LED_DMA = 10          # DMA channel to use for generating signal (try 10)
     LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
@@ -107,9 +405,13 @@ class InventorHATMini():
         162,163,165,167,169,170,172,174,176,178,179,181,183,185,187,189,
         191,193,194,196,198,200,202,204,206,208,210,212,214,216,218,220,
         222,224,227,229,231,233,235,237,239,241,244,246,248,250,252,255]
-    
+
     # Speed of sound is 343m/s which we need in cm/ns for our distance measure
     SPEED_OF_SOUND_CM_NS = 343 * 100 / 1E9  # 0.0000343 cm / ns
+
+
+    MOTOR_A_NAME = 'A'
+    MOTOR_B_NAME = 'B'
 
     def __init__(self, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
         """ Initialise inventor hat mini's hardware functions
@@ -133,13 +435,9 @@ class InventorHATMini():
         except FileNotFoundError:
             raise RuntimeError(NO_I2C) from None
 
-        self.__period = self.__ioe.set_pwm_frequency(25000, pwm_module=0)
-        self.__ioe.set_mode(self.IOE_MOTOR_A_PINS[0], io.PWM)
-        self.__ioe.set_mode(self.IOE_MOTOR_A_PINS[1], io.PWM)
-        self.__ioe.set_mode(self.IOE_MOTOR_B_PINS[0], io.PWM)
-        self.__ioe.set_mode(self.IOE_MOTOR_B_PINS[1], io.PWM)
-        self.__ioe.output(self.IOE_MOTOR_A_PINS[0], self.__period // 8)
-        self.__ioe.output(self.IOE_MOTOR_B_PINS[0], self.__period)
+        if init_motors:
+            self.motor_a = Motor(self.__ioe, self.IOE_MOTOR_A_PINS[0], self.IOE_MOTOR_A_PINS[1])
+            self.motor_b = Motor(self.__ioe, self.IOE_MOTOR_B_PINS[0], self.IOE_MOTOR_B_PINS[1])
 
         if init_leds:
             # Setup the PixelStrip object to use with Inventor's LEDs
@@ -153,7 +451,7 @@ class InventorHATMini():
                 raise RuntimeError(LED_INIT_FAILED) from None
         else:
             self.leds = None
-            
+
         atexit.register(self.__cleanup)
 
     def __cleanup(self):
@@ -162,10 +460,9 @@ class InventorHATMini():
                 self.leds.setPixelColor(i, 0)
             self.leds.show()
 
-        self.__ioe.output(self.IOE_MOTOR_A_PINS[0], 0, load=False)
-        self.__ioe.output(self.IOE_MOTOR_A_PINS[1], 0, load=False)
-        self.__ioe.output(self.IOE_MOTOR_B_PINS[0], 0, load=False)
-        self.__ioe.output(self.IOE_MOTOR_B_PINS[1], 0)
+        if self.motor_a is not None:
+            self.motor_a.coast()
+            self.motor_b.coast()
 
         GPIO.cleanup()
 
@@ -202,8 +499,29 @@ class InventorHATMini():
         self.leds.start()
         """
 
+    ##########
+    # Button #
+    ##########
     def switch_pressed(self):
         return GPIO.input(self.PI_USER_SW_PIN) != 0
+
+    ########
+    # LEDs #
+    ########
+    """
+    """
+
+    ##########
+    # Motors #
+    ##########
+    def disable_motors(self):
+        """ Disables both motors, allowing them to spin freely.
+        """
+        #GPIO.output(self.MOTOR_EN_PIN, False)
+
+    #########
+    # Servo #
+    #########
 
     def mute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, False)
@@ -213,12 +531,12 @@ class InventorHATMini():
 
 
 if __name__ == "__main__":
-    board = InventorHATMini(start_muted=True)
-    
+    board = InventorHATMini(init_leds=False, start_muted=True)
+
     print("Inventor HAT Mini Function Test")
-    
+
     # time.sleep(2.0)
-    
+
     last_state = False
     while True:
         state = board.switch_pressed()
@@ -226,17 +544,20 @@ if __name__ == "__main__":
             if state:
                 print("User Switch pressed")
                 board.unmute_audio()
-                for i in range(board.leds.numPixels()):
-                    board.leds.setPixelColor(i, 0x00FF00)
-                board.leds.show()
+                if board.leds is not None:
+                    for i in range(board.leds.numPixels()):
+                        board.leds.setPixelColor(i, 0x00FF00)
+                    board.leds.show()
+                board.motor_a.full_positive()
             else:
                 print("User Switch released")
                 board.mute_audio()
-                
-                for i in range(board.leds.numPixels()):
-                    board.leds.setPixelColor(i, 0xFF0000)
-                board.leds.show()
-            
+                if board.leds is not None:
+                    for i in range(board.leds.numPixels()):
+                        board.leds.setPixelColor(i, 0xFF0000)
+                    board.leds.show()
+                board.motor_a.coast()
+
         last_state = state
-        
+
         time.sleep(0.01)
