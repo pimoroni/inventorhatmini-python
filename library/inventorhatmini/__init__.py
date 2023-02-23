@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import math
 import time
 import RPi.GPIO as GPIO
 from colorsys import hsv_to_rgb
@@ -55,6 +56,28 @@ def clamp(n, smallest, largest):
 
 def map_float(input, in_min, in_max, out_min, out_max):
     return (((input - in_min) * (out_max - out_min)) / (in_max - in_min)) + out_min
+
+# A simple class for handling Proportional, Integral & Derivative (PID) control calculations
+class PID:
+    def __init__(self, kp, ki, kd, sample_rate):
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.setpoint = 0
+        self._error_sum = 0
+        self._last_value = 0
+        self._sample_rate = sample_rate
+
+    def calculate(self, value, value_change=None):
+        error = self.setpoint - value
+        self._error_sum += error * self._sample_rate
+        if value_change is None:
+            rate_error = (value - self._last_value) / self._sample_rate
+        else:
+            rate_error = value_change
+        self._last_value = value
+
+        return (error * self.kp) + (self._error_sum * self.ki) - (rate_error * self.kd)
 
 class MotorState():
     DEFAULT_SPEED_SCALE = 1.0  # The standard motor speed scale
@@ -155,7 +178,7 @@ class MotorState():
             speed_max = self.motor_scale
 
         speed = map_float(input, in_min, in_max, speed_min, speed_max)
-        return set_speed_with_return(speed)
+        return self.set_speed_with_return(speed)
 
     def get_direction(self):
         return self.motor_direction
@@ -182,7 +205,7 @@ class MotorState():
 
     def set_deadzone_with_return(self, deadzone):
         self.motor_deadzone = clamp(deadzone, 0.0, 1.0)
-        return get_deadzoned_duty()
+        return self.get_deadzoned_duty()
 
     def duty_to_level(duty, resolution):
         return int(duty * resolution)
@@ -227,34 +250,39 @@ class Motor():
                     self.ioe.output(self.pin_n, 0 - signed_level, load=True)
 
         else:
-            self.ioe.output(self.pin_p, 0)
-            self.ioe.output(self.pin_n, 0)
+            self.ioe.output(self.pin_p, 0, load=False)
+            self.ioe.output(self.pin_n, 0, load=True)
 
-    def __init__(self, ioe, pin_p, pin_n, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
+    def __init__(self, ioe, pins, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
         deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
 
         self.ioe = ioe
 
-        self.pin_p = pin_p
-        self.pin_n = pin_n
+        if not isinstance(pins, list) and not isinstance(pins, tuple):
+            raise TypeError("cannot convert object to a list or tuple of pins")
+        
+        if len(pins) != 2:
+            raise TypeError("list or tuple must only contain two integers")
+    
+        self.pin_p = pins[0]
+        self.pin_n = pins[1]
 
         self.state = MotorState(direction, speed_scale, zeropoint, deadzone)
 
         self.pwm_frequency = freq
         self.motor_mode = mode
 
-
-        self.pin_p_mod = self.ioe.get_pwm_module(pin_p)
-        self.pin_n_mod = self.ioe.get_pwm_module(pin_n)
+        self.pin_p_mod = self.ioe.get_pwm_module(self.pin_p)
+        self.pin_n_mod = self.ioe.get_pwm_module(self.pin_n)
         if self.pin_p_mod != self.pin_n_mod:
             raise ValueError("Both motor pins must be on the same PWM module!")
 
         self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=False)
 
-        ioe.set_mode(pin_p, io.PWM)
-        ioe.set_mode(pin_n, io.PWM)
-        ioe.output(pin_p, 0, load=False)
-        ioe.output(pin_n, 0, load=True)
+        ioe.set_mode(self.pin_p, io.PWM)
+        ioe.set_mode(self.pin_n, io.PWM)
+        ioe.output(self.pin_p, 0, load=False)
+        ioe.output(self.pin_n, 0, load=True)
 
     def enable(self):
         self.__apply_duty(self.state.enable_with_return(), self.motor_mode)
@@ -269,20 +297,20 @@ class Motor():
         if duty is None:
             return self.state.get_duty()
         else:
-            self.__apply_duty(self.set_duty_with_return(duty), self.motor_mode)
+            self.__apply_duty(self.state.set_duty_with_return(duty), self.motor_mode)
 
     def speed(self, speed=None):
         if speed is None:
             return self.state.get_speed()
         else:
-            self.__apply_duty(self.set_speed_with_return(speed), self.motor_mode)
+            self.__apply_duty(self.state.set_speed_with_return(speed), self.motor_mode)
 
     def frequency(self, freq=None):
         if freq is None:
             return self.pwm_frequency
         else:
             if (freq >= MotorState.MIN_FREQUENCY) and (freq <= MotorState.MAX_FREQUENCY):
-                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, pin_p_mod, load=False)
+                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=False)
                 self.__apply_duty(self.state.get_deadzoned_duty(), self.motor_mode)
             else:
                 raise ValueError(f"freq out of range. Expected {MotorState.MIN_FREQUENCY}Hz to {MotorState.MAX_FREQUENCY}Hz")
@@ -303,25 +331,25 @@ class Motor():
         self.__apply_duty(self.state.full_positive_with_return(), self.motor_mode)
 
     def to_percent(self, input, in_min=MotorState.ZERO_PERCENT, in_max=MotorState.ONEHUNDRED_PERCENT, speed_min=None, speed_max=None):
-        self.__apply_duty(self.state.to_percent_with_return(input, in_min, in_max, speed_min, speed_max), motor_mode)
+        self.__apply_duty(self.state.to_percent_with_return(input, in_min, in_max, speed_min, speed_max), self.motor_mode)
 
     def direction(self, direction=None):
         if direction is None:
             return self.state.get_direction()
         else:
-            self.set_direction(direction)
+            self.state.set_direction(direction)
 
     def speed_scale(self, speed_scale=None):
         if speed_scale is None:
             return self.state.get_speed_scale()
         else:
-            self.set_speed_scale(speed_scale)
+            self.state.set_speed_scale(speed_scale)
 
     def zeropoint(self, zeropoint=None):
         if zeropoint is None:
             return self.state.get_zeropoint()
         else:
-            self.set_zeropoint(zeropoint)
+            self.state.set_zeropoint(zeropoint)
 
     def deadzone(self, deadzone=None):
         if deadzone is None:
@@ -696,7 +724,6 @@ class ServoState():
         return level
 
 
-
 class Servo():
     def __apply_pulse(self, pulse):
         self.ioe.output(self.pin, ServoState.pulse_to_level(pulse, self.pwm_period, self.pwm_frequency))
@@ -773,6 +800,148 @@ class Servo():
             self.state.set_calibration(calibration)
 
 
+
+MMME_CPR = 12
+ROTARY_CPR = 24
+
+
+Capture = namedtuple("Capture", ["count",
+                                 "delta",
+                                 "frequency",
+                                 "revolutions",
+                                 "degrees",
+                                 "radians",
+                                 "revolutions_delta",
+                                 "degrees_delta",
+                                 "radians_delta",
+                                 "revolutions_per_second",
+                                 "revolutions_per_minute",
+                                 "degrees_per_second",
+                                 "radians_per_second"])
+
+
+class Encoder():
+    def __init__(self, ioe, channel, pins, common_pin=None, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
+        self.ioe = ioe
+        self.channel = channel
+        self.enc_direction = direction
+        self.enc_counts_per_rev = counts_per_rev
+
+        if not isinstance(pins, list) and not isinstance(pins, tuple):
+            raise TypeError("cannot convert object to a list or tuple of pins")
+        
+        if len(pins) != 2:
+            raise TypeError("list or tuple must only contain two integers")
+
+        self.step = 0
+        self.turn = 0
+        self.last_count = 0
+        self.last_delta_count = 0
+        self.last_capture_count = 0
+
+        self.ioe.setup_rotary_encoder(channel, pins[0], pins[1], pin_c=common_pin, count_microsteps=count_microsteps)
+
+    def count(self):
+        # Read the current count
+        count = self.ioe.read_rotary_encoder(self.channel)
+        change = count - self.last_count
+        self.last_count = count
+
+        if change > 0:
+            self.step += change
+            while self.step > self.enc_counts_per_rev:
+                self.step -= self.enc_counts_per_rev
+                self.turn += 1
+                
+        elif change < 0:
+            self.step -= change
+            while self.step < 0:
+                self.step += self.enc_counts_per_rev
+                self.turn -= 1
+                
+        return count
+
+    def delta(self):
+        count = self.count()
+
+        # Determine the change in counts since the last time this function was performed
+        change = count - self.last_delta_count
+        self.last_delta_count = count
+        
+        return change
+
+    def zero(self):
+        self.ioe.clear_rotary_encoder(self.channel)
+        self.step = 0
+        self.turn = 0
+        self.last_count = 0
+        self.last_delta_count = 0
+        self.last_capture_count = 0
+
+    def step(self):
+        self.count()
+        return self.step
+
+    def turn(self):
+        self.count()
+        return self.turn
+
+    def revolutions(self):
+        return self.count() / self.enc_counts_per_rev
+
+    def degrees(self):
+        return self.revolutions() * 360.0
+
+    def radians(self):
+        return self.revolutions() * math.pi * 2.0
+
+    def direction(self, direction=None):
+        if direction is None:
+            return self.enc_direction
+        else:
+            if direction not in (NORMAL_DIR, REVERSED_DIR):
+                raise ValueError("direction out of range. Expected NORMAL_DIR (0) or REVERSED_DIR (1)")
+            self.enc_direction = direction
+
+    def counts_per_rev(self, counts_per_rev=None):
+        if counts_per_rev is None:
+            return self.enc_counts_per_rev
+        else:
+            if counts_per_rev < sys.float_info.epsilon:
+                raise ValueError("counts_per_rev out of range. Expected greater than 0.0")
+            self.enc_counts_per_rev = counts_per_rev
+
+    def capture(self, sample_rate):
+        # Read the current count
+        count = self.count()
+        
+        # Determine the change in counts since the last capture was taken
+        change = count - self.last_capture_count
+        self.last_capture_count = count
+        
+        if sample_rate < sys.float_info.epsilon:
+            raise ValueError("sample_rate out of range. Expected greater than 0.0")
+
+        frequency = change / sample_rate        
+        revolutions = count / self.enc_counts_per_rev
+        revolutions_delta = change / self.enc_counts_per_rev
+        revolutions_per_second = frequency / self.enc_counts_per_rev
+
+        return Capture(count=count,
+                       delta=change,
+                       frequency=frequency,
+                       revolutions=revolutions,
+                       degrees=revolutions * 360.0,
+                       radians=revolutions * math.pi * 2.0,
+                       revolutions_delta=revolutions_delta,
+                       degrees_delta=revolutions_delta * 360.0,
+                       radians_delta=revolutions_delta * math.pi * 2.0,
+                       revolutions_per_second=revolutions_per_second,
+                       revolutions_per_minute=revolutions_per_second * 60.0,
+                       degrees_per_second=revolutions_per_second * 360.0,
+                       radians_per_second=revolutions_per_second * math.pi * 2.0)
+
+    
 class InventorHATMini():
     # I2C pins
     PI_I2C_SDA_PIN = 2
@@ -801,8 +970,8 @@ class InventorHATMini():
     IOE_MOTOR_B_PINS = (16, 15)
 
     # Expander motor encoder pins
-    IOE_ENCODER_A_PINS = (4, 3)
-    IOE_ENCODER_B_PINS = (1, 26)
+    IOE_ENCODER_A_PINS = (3, 4)
+    IOE_ENCODER_B_PINS = (26, 1)
 
     # Expander servo pins
     IOE_SERVO_PINS = (23, 24, 25, 22)
@@ -865,10 +1034,19 @@ class InventorHATMini():
         except FileNotFoundError:
             raise RuntimeError(NO_I2C) from None
 
+        self.motors = None
+        self.encoders = None
         if init_motors:
-            self.motor_a = Motor(self.__ioe, self.IOE_MOTOR_A_PINS[0], self.IOE_MOTOR_A_PINS[1])
-            self.motor_b = Motor(self.__ioe, self.IOE_MOTOR_B_PINS[0], self.IOE_MOTOR_B_PINS[1])
+            cpr = MMME_CPR * motor_gear_ratio
+            self.motors = [Motor(self.__ioe, self.IOE_MOTOR_A_PINS), Motor(self.__ioe, self.IOE_MOTOR_B_PINS)]
+            self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True),
+                             Encoder(self.__ioe, 2, self.IOE_ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True)]
 
+        self.servos = None
+        if init_servos:
+            self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
+
+        self.leds = None
         if init_leds:
             # Setup the PixelStrip object to use with Inventor's LEDs
             self.leds = PixelStrip(NUM_LEDS, self.PI_LED_DATA_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL, self.LED_GAMMA)
@@ -879,12 +1057,7 @@ class InventorHATMini():
             except:
                 self.leds = None
                 raise RuntimeError(LED_INIT_FAILED) from None
-        else:
-            self.leds = None
-            
-        if init_servos:
-            self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
-
+    
         atexit.register(self.__cleanup)
 
     def __cleanup(self):
