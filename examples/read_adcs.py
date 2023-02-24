@@ -1,7 +1,7 @@
 import time
 from machine import Pin
 from pimoroni import Analog
-from inventorhatmini import InventorHATMini, ADCS, NUM_ADCS, LED_A0
+from inventorhatmini import InventorHATMini, ADCS, NUM_ADCS, LED_ADC_1
 
 """
 Shows how to initialise and read the 4 ADC headers of Inventor HAT Mini.
@@ -36,7 +36,7 @@ while not board.switch_pressed():
         # Set the neighbouring LED to a colour based on the
         # voltage, with Green for high and Blue for low
         hue = (2.0 - (voltage / 3.3)) * 0.333
-        board.leds.set_hsv(i + LED_A0, hue, 1.0, BRIGHTNESS)
+        board.leds.set_hsv(i + LED_ADC_1, hue, 1.0, BRIGHTNESS)
 
     # Print a new line
     print()

@@ -1,6 +1,5 @@
 import time
-from pimoroni import PID, REVERSED_DIR
-from inventor import Inventor2040W, MOTOR_A, MOTOR_B, NUM_MOTORS, NUM_LEDS
+from inventorhatmini import InventorHATMini, MOTOR_A, MOTOR_B, NUM_MOTORS, NUM_LEDS, PID, REVERSED_DIR
 
 """
 A demonstration of driving both of Inventor HAT Mini's motor outputs through a
@@ -94,12 +93,23 @@ sequence = 0
 captures = [None] * NUM_MOTORS
 
 
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user switch is pressed
 while not board.switch_pressed():
 
+    # Record the start time of this loop
+    start_time = time.monotonic()
+
     # Capture the state of all the encoders
     for i in range(NUM_MOTORS):
-        captures[i] = board.encoders[i].capture()
+        captures[i] = board.encoders[i].capture(UPDATE_RATE)
 
     for i in range(NUM_MOTORS):
         # Calculate the acceleration to apply to the motor to move it closer to the velocity setpoint
@@ -156,7 +166,8 @@ while not board.switch_pressed():
         board.leds.set_hsv(NUM_LEDS - i - 1, hue + offset_r, 1.0, BRIGHTNESS)
     """
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Stop all the motors
 for m in board.motors:

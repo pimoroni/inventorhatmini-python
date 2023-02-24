@@ -1,5 +1,4 @@
 from inventorhatmini import InventorHATMini, SERVO_1, SERVO_2, SERVO_3, SERVO_4
-#from servo import Calibration, ANGULAR, LINEAR, CONTINUOUS
 from inventorhatmini import Calibration, ANGULAR, LINEAR, CONTINUOUS
 
 
@@ -41,7 +40,7 @@ print("Wide Angle Servo:", angular_servo.calibration(), end="\n\n")
 # Create and modify the calibration of a linear servo
 # ---------------------------------------------------
 
-LINEAR_RANGE = 50   # The range we want the linear servo to cover
+LINEAR_RANGE = 50  # The range we want the linear servo to cover
 
 # Update the linear servo so its max value matches the real distance travelled
 cal = linear_servo.calibration()
@@ -57,7 +56,7 @@ print("Linear Servo:", linear_servo.calibration(), end="\n\n")
 # Create and modify the calibration of a continuous rotation servo
 # ----------------------------------------------------------------
 
-CONTINUOUS_SPEED = 10   # The speed we want the continuous servo to cover
+CONTINUOUS_SPEED = 10  # The speed we want the continuous servo to cover
 
 # Update the continuous rotation servo so its value matches its real speed
 cal = continuous_servo.calibration()

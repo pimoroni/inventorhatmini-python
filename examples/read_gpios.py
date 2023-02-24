@@ -1,6 +1,5 @@
 import time
-from machine import Pin
-from inventor import Inventor2040W, GPIOS, NUM_GPIOS
+from inventorhatmini import InventorHATMini, GPIOS, NUM_GPIOS
 
 """
 Shows how to initialise and read the 4 GPIO headers of Inventor HAT Mini.

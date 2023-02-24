@@ -1,6 +1,5 @@
 import time
-from pimoroni import NORMAL_DIR  # , REVERSED_DIR
-from inventorhatmini import InventorHATMini, MOTOR_A
+from inventorhatmini import InventorHATMini, MOTOR_A, NORMAL_DIR  # , REVERSED_DIR
 
 """
 A program that profiles the speed of a motor across its PWM
@@ -17,9 +16,10 @@ DEAD_ZONE = 0.0                         # The duty cycle below which the motor's
 DUTY_STEPS = 100                        # How many duty cycle steps to sample the speed of
 SETTLE_TIME = 0.1                       # How long to wait after changing motor duty cycle
 CAPTURE_TIME = 0.2                      # How long to capture the motor's speed at each step
+SLEEP_STEP = 0.02                       # The time between taking counts during counting_sleep()
 
 # Create a new InventorHATMini and get a motor and encoder from it
-board = InventorHATMini(motor_rear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
 m = board.motors[MOTOR_A]
 enc = board.encoders[MOTOR_A]
 
@@ -33,6 +33,15 @@ m.direction(DIRECTION)
 enc.direction(DIRECTION)
 
 
+# The encoder needs to be read semi-regularly to avoid the chip's internal counter
+# from wrapping and giving us wrong speed measurements, so use this instead of time.sleep()
+def counting_sleep(duration):
+    start = time.monotonic()
+    while time.monotonic() - start < duration:
+        enc.count()  # We don't do anything with the returned count
+        time.sleep(SLEEP_STEP)
+
+
 # Function that performs a single profiling step
 def profile_at_duty(duty):
     # Set the motor to a new duty cycle and wait for it to settle
@@ -40,16 +49,16 @@ def profile_at_duty(duty):
         m.duty(0.0 - duty)
     else:
         m.duty(duty)
-    time.sleep(SETTLE_TIME)
+    counting_sleep(SETTLE_TIME)
 
     # Perform a dummy capture to clear the encoder
-    enc.capture()
+    enc.capture(SETTLE_TIME)
 
     # Wait for the capture time to pass
-    time.sleep(CAPTURE_TIME)
+    counting_sleep(CAPTURE_TIME)
 
     # Perform a capture and read the measured speed
-    capture = enc.capture()
+    capture = enc.capture(CAPTURE_TIME)
     measured_speed = capture.revolutions_per_second
 
     # These are some alternate speed measurements from the encoder

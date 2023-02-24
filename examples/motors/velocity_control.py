@@ -1,8 +1,7 @@
 import time
 import math
 import random
-from pimoroni import PID, NORMAL_DIR  # , REVERSED_DIR
-from inventorhatmini import InventorHATMini, MOTOR_A
+from inventorhatmini import InventorHATMini, MOTOR_A, PID, NORMAL_DIR  # , REVERSED_DIR
 
 """
 An example of how to drive a motor smoothly between random speeds,
@@ -35,7 +34,7 @@ VEL_KD = 0.4                            # Velocity derivative (D) gain
 
 
 # Create a new InventorHATMini and get a motor and encoder from it
-board = InventorHATMini(motor_rear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
 m = board.motors[MOTOR_A]
 enc = board.encoders[MOTOR_A]
 
@@ -60,11 +59,23 @@ print_count = 0
 start_value = 0.0
 end_value = random.uniform(-VELOCITY_EXTENT, VELOCITY_EXTENT)
 
+
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user button is pressed
 while not board.switch_pressed():
 
+    # Record the start time of this loop
+    start_time = time.monotonic()
+
     # Capture the state of the encoder
-    capture = enc.capture()
+    capture = enc.capture(UPDATE_RATE)
 
     # Calculate how far along this movement to be
     percent_along = min(update / UPDATES_PER_MOVE, 1.0)
@@ -105,7 +116,8 @@ while not board.switch_pressed():
         start_value = end_value
         end_value = random.uniform(-VELOCITY_EXTENT, VELOCITY_EXTENT)
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Disable the motor
 m.disable()

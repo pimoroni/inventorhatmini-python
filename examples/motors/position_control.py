@@ -1,7 +1,6 @@
 import time
 import math
 import random
-#from pimoroni import PID, NORMAL_DIR  # , REVERSED_DIR
 from inventorhatmini import InventorHATMini, MOTOR_A, PID, NORMAL_DIR
 
 """
@@ -60,8 +59,20 @@ print_count = 0
 start_value = 0.0
 end_value = random.uniform(-POSITION_EXTENT, POSITION_EXTENT)
 
+
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user button is pressed
 while not board.switch_pressed():
+
+    # Record the start time of this loop
+    start_time = time.monotonic()
 
     # Capture the state of the encoder
     capture = enc.capture(UPDATE_RATE)
@@ -104,7 +115,8 @@ while not board.switch_pressed():
         start_value = end_value
         end_value = random.uniform(-POSITION_EXTENT, POSITION_EXTENT)
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Disable the motor
 m.disable()

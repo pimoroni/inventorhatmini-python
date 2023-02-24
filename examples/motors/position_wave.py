@@ -1,7 +1,6 @@
 import time
 import math
-from pimoroni import PID, REVERSED_DIR
-from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_IO_4
+from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_ADC_4, PID, REVERSED_DIR
 
 """
 A demonstration of driving both of Inventor HAT Mini's motor outputs between
@@ -23,7 +22,7 @@ UPDATES_PER_MOVE = TIME_FOR_EACH_MOVE * UPDATES
 PRINT_DIVIDER = 4                       # How many of the updates should be printed (i.e. 2 would be every other update)
 
 # LED constant
-BRIGHTNESS = 0.4      # The brightness of the RGB LED
+BRIGHTNESS = 0.4                        # The brightness of the RGB LED
 
 # PID values
 POS_KP = 0.14                           # Position proportional (P) gain
@@ -31,8 +30,8 @@ POS_KI = 0.0                            # Position integral (I) gain
 POS_KD = 0.0022                         # Position derivative (D) gain
 
 
-# Create a new Inventor2040W
-board = Inventor2040W(motor_gear_ratio=GEAR_RATIO, init_leds=False)
+# Create a new InventorHATMini
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
 
 # Set the speed scale of the motors
 board.motors[MOTOR_A].speed_scale(SPEED_SCALE)
@@ -59,12 +58,24 @@ end_value = 270.0
 
 captures = [None] * NUM_MOTORS
 
+
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user button is pressed
 while not board.switch_pressed():
 
+    # Record the start time of this loop
+    start_time = time.monotonic()
+
     # Capture the state of all the encoders
     for i in range(NUM_MOTORS):
-        captures[i] = board.encoders[i].capture()
+        captures[i] = board.encoders[i].capture(UPDATE_RATE)
 
     # Calculate how far along this movement to be
     percent_along = min(update / UPDATES_PER_MOVE, 1.0)
@@ -105,7 +116,8 @@ while not board.switch_pressed():
         start_value = end_value
         end_value = temp
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Stop all the motors
 for m in board.motors:

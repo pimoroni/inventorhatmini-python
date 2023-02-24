@@ -7,7 +7,7 @@ from colorsys import hsv_to_rgb
 from rpi_ws281x import PixelStrip, Color
 import atexit
 import ioexpander as io
-from inventorhatmini.errors import *
+from inventorhatmini.errors import NO_IOE_MSG, NO_I2C, LED_INIT_FAILED
 import sys
 from collections import namedtuple
 
@@ -32,10 +32,10 @@ LED_SERVO_1 = 0
 LED_SERVO_2 = 1
 LED_SERVO_3 = 2
 LED_SERVO_4 = 3
-LED_ADC1 = 4
-LED_ADC2 = 5
-LED_ADC3 = 6
-LED_ADC4 = 7
+LED_ADC_1 = 4
+LED_ADC_2 = 5
+LED_ADC_3 = 6
+LED_ADC_4 = 7
 
 
 # Count Constants
@@ -51,11 +51,14 @@ SLOW_DECAY = 1  # aka 'Braking'
 NORMAL_DIR = 0
 REVERSED_DIR = 1
 
+
 def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
 
+
 def map_float(input, in_min, in_max, out_min, out_max):
     return (((input - in_min) * (out_max - out_min)) / (in_max - in_min)) + out_min
+
 
 # A simple class for handling Proportional, Integral & Derivative (PID) control calculations
 class PID:
@@ -79,10 +82,11 @@ class PID:
 
         return (error * self.kp) + (self._error_sum * self.ki) - (rate_error * self.kd)
 
+
 class MotorState():
     DEFAULT_SPEED_SCALE = 1.0  # The standard motor speed scale
     DEFAULT_ZEROPOINT = 0.0  # The standard motor zeropoint
-    DEFAULT_DEADZONE = 0.05 # The standard motor deadzone
+    DEFAULT_DEADZONE = 0.05  # The standard motor deadzone
 
     DEFAULT_DECAY_MODE = SLOW_DECAY  # The standard motor decay behaviour
     DEFAULT_FREQUENCY = 25000.0  # The standard motor update rate
@@ -91,7 +95,6 @@ class MotorState():
 
     ZERO_PERCENT = 0.0
     ONEHUNDRED_PERCENT = 1.0
-
 
     def __init__(self, direction=NORMAL_DIR, speed_scale=DEFAULT_SPEED_SCALE, zeropoint=DEFAULT_ZEROPOINT, deadzone=DEFAULT_DEADZONE):
         self.motor_speed = 0.0
@@ -254,16 +257,16 @@ class Motor():
             self.ioe.output(self.pin_n, 0, load=True)
 
     def __init__(self, ioe, pins, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
-        deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
+                 deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
 
         self.ioe = ioe
 
         if not isinstance(pins, list) and not isinstance(pins, tuple):
             raise TypeError("cannot convert object to a list or tuple of pins")
-        
+
         if len(pins) != 2:
             raise TypeError("list or tuple must only contain two integers")
-    
+
         self.pin_p = pins[0]
         self.pin_n = pins[1]
 
@@ -364,11 +367,13 @@ class Motor():
             self.motor_mode = mode
             self.__apply_duty(self.state.get_deadzoned_duty(), self.motor_mode)
 
+
 Pair = namedtuple("Pair", ["pulse", "value"])
 
 ANGULAR = 0
 LINEAR = 1
 CONTINUOUS = 2
+
 
 class Calibration():
     DEFAULT_MIN_PULSE = 500.0   # in microseconds
@@ -377,7 +382,6 @@ class Calibration():
 
     LOWER_HARD_LIMIT = 400.0    # The minimum microsecond pulse to send
     UPPER_HARD_LIMIT = 2600.0   # The maximum microsecond pulse to send
-
 
     def __init__(self, default_type=None):
         self.calibration = None
@@ -428,15 +432,15 @@ class Calibration():
     def apply_default_pairs(self, default_type):
         if default_type == ANGULAR:
             self.apply_three_pairs(self.DEFAULT_MIN_PULSE, self.DEFAULT_MID_PULSE, self.DEFAULT_MAX_PULSE,
-                                   -90.0,                  0.0,                    +90.0)
+                                   -90.0, 0.0, +90.0)
 
         elif default_type == LINEAR:
             self.apply_two_pairs(self.DEFAULT_MIN_PULSE, self.DEFAULT_MAX_PULSE,
-                                 0.0,                    1.0)
+                                 0.0, 1.0)
 
         elif default_type == CONTINUOUS:
             self.apply_three_pairs(self.DEFAULT_MIN_PULSE, self.DEFAULT_MID_PULSE, self.DEFAULT_MAX_PULSE,
-                                   -1.0,                   0.0,                    +1.0)
+                                   -1.0, 0.0, +1.0)
 
     def size(self):
         return len(self.calibration)
@@ -573,7 +577,7 @@ class Calibration():
             # Is the pulse below the bottom most calibration pair?
             if pulse_out < self.calibration[0].pulse:
                 # Should the pulse be limited to the calibration or projected below it?
-                if limit_lower:
+                if self.limit_lower:
                     value_out = self.calibration[0].value
                     pulse_out = self.calibration[0].pulse
                 else:
@@ -583,7 +587,7 @@ class Calibration():
             # Is the pulse above the top most calibration pair?
             elif pulse > self.calibration[last].pulse:
                 # Should the pulse be limited to the calibration or projected above it?
-                if limit_upper:
+                if self.limit_upper:
                     value_out = self.calibration[last].value
                     pulse_out = self.calibration[last].pulse
                 else:
@@ -600,6 +604,7 @@ class Calibration():
             return Pair(pulse_out, value_out)
 
         return None
+
 
 class ServoState():
     DEFAULT_FREQUENCY = 50.0    # The standard servo update rate
@@ -766,7 +771,7 @@ class Servo():
             return self.pwm_frequency
         else:
             if (freq >= ServoState.MIN_FREQUENCY) and (freq <= ServoState.MAX_FREQUENCY):
-                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, pin_p_mod, load=True)
+                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=True)
                 if state.is_enabled():
                     self.__apply_pulse(self.state.get_deadzoned_duty(), self.motor_mode)
             else:
@@ -800,7 +805,6 @@ class Servo():
             self.state.set_calibration(calibration)
 
 
-
 MMME_CPR = 12
 ROTARY_CPR = 24
 
@@ -829,61 +833,71 @@ class Encoder():
 
         if not isinstance(pins, list) and not isinstance(pins, tuple):
             raise TypeError("cannot convert object to a list or tuple of pins")
-        
+
         if len(pins) != 2:
             raise TypeError("list or tuple must only contain two integers")
 
+        self.local_count = 0
         self.step = 0
         self.turn = 0
-        self.last_count = 0
+        self.last_raw_count = 0
         self.last_delta_count = 0
         self.last_capture_count = 0
 
         self.ioe.setup_rotary_encoder(channel, pins[0], pins[1], pin_c=common_pin, count_microsteps=count_microsteps)
 
-    def count(self):
+    def __take_reading(self):
         # Read the current count
-        count = self.ioe.read_rotary_encoder(self.channel)
-        change = count - self.last_count
-        self.last_count = count
+        raw_count = self.ioe.read_rotary_encoder(self.channel)
+        raw_change = raw_count - self.last_raw_count
+        self.last_raw_count = raw_count
 
-        if change > 0:
-            self.step += change
+        # Invert the change
+        if self.enc_direction == REVERSED_DIR:
+            raw_change = 0 - raw_change
+
+        self.local_count += raw_change
+
+        if raw_change > 0:
+            self.step += raw_change
             while self.step > self.enc_counts_per_rev:
                 self.step -= self.enc_counts_per_rev
                 self.turn += 1
-                
-        elif change < 0:
-            self.step -= change
+
+        elif raw_change < 0:
+            self.step -= raw_change
             while self.step < 0:
                 self.step += self.enc_counts_per_rev
                 self.turn -= 1
-                
-        return count
+
+    def count(self):
+        self.__take_reading()
+        return self.local_count
 
     def delta(self):
-        count = self.count()
+        self.__take_reading()
 
         # Determine the change in counts since the last time this function was performed
-        change = count - self.last_delta_count
-        self.last_delta_count = count
-        
+        change = self.local_count - self.last_delta_count
+        self.last_delta_count = self.local_count
+
         return change
 
     def zero(self):
         self.ioe.clear_rotary_encoder(self.channel)
+        self.local_count = 0
         self.step = 0
         self.turn = 0
-        self.last_count = 0
+        self.last_raw_count = 0
         self.last_delta_count = 0
         self.last_capture_count = 0
 
     def step(self):
-        self.count()
+        self.__take_reading()
         return self.step
 
     def turn(self):
-        self.count()
+        self.__take_reading()
         return self.turn
 
     def revolutions(self):
@@ -912,22 +926,21 @@ class Encoder():
             self.enc_counts_per_rev = counts_per_rev
 
     def capture(self, sample_rate):
-        # Read the current count
-        count = self.count()
-        
+        self.__take_reading()
+
         # Determine the change in counts since the last capture was taken
-        change = count - self.last_capture_count
-        self.last_capture_count = count
-        
+        change = self.local_count - self.last_capture_count
+        self.last_capture_count = self.local_count
+
         if sample_rate < sys.float_info.epsilon:
             raise ValueError("sample_rate out of range. Expected greater than 0.0")
 
-        frequency = change / sample_rate        
-        revolutions = count / self.enc_counts_per_rev
+        frequency = change / sample_rate
+        revolutions = self.local_count / self.enc_counts_per_rev
         revolutions_delta = change / self.enc_counts_per_rev
         revolutions_per_second = frequency / self.enc_counts_per_rev
 
-        return Capture(count=count,
+        return Capture(count=self.local_count,
                        delta=change,
                        frequency=frequency,
                        revolutions=revolutions,
@@ -941,7 +954,7 @@ class Encoder():
                        degrees_per_second=revolutions_per_second * 360.0,
                        radians_per_second=revolutions_per_second * math.pi * 2.0)
 
-    
+
 class InventorHATMini():
     # I2C pins
     PI_I2C_SDA_PIN = 2
@@ -956,7 +969,7 @@ class InventorHATMini():
 
     # User switch pin
     PI_USER_SW_PIN = 26
-    
+
     # UART / HC-SR04 Ultrasound pins
     PI_UART_TX_TRIG_PIN = 14
     PI_UART_RX_ECHO_PIN = 25
@@ -998,16 +1011,15 @@ class InventorHATMini():
         40, 41, 42, 43, 44, 45, 46, 46, 47, 48, 49, 50, 51, 52, 53, 54,
         55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
         71, 72, 73, 74, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 88, 89,
-        90, 91, 93, 94, 95, 96, 98, 99,100,102,103,104,106,107,109,110,
-        111,113,114,116,117,119,120,121,123,124,126,128,129,131,132,134,
-        135,137,138,140,142,143,145,146,148,150,151,153,155,157,158,160,
-        162,163,165,167,169,170,172,174,176,178,179,181,183,185,187,189,
-        191,193,194,196,198,200,202,204,206,208,210,212,214,216,218,220,
-        222,224,227,229,231,233,235,237,239,241,244,246,248,250,252,255]
+        90, 91, 93, 94, 95, 96, 98, 99, 100, 102, 103, 104, 106, 107, 109, 110,
+        111, 113, 114, 116, 117, 119, 120, 121, 123, 124, 126, 128, 129, 131, 132, 134,
+        135, 137, 138, 140, 142, 143, 145, 146, 148, 150, 151, 153, 155, 157, 158, 160,
+        162, 163, 165, 167, 169, 170, 172, 174, 176, 178, 179, 181, 183, 185, 187, 189,
+        191, 193, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220,
+        222, 224, 227, 229, 231, 233, 235, 237, 239, 241, 244, 246, 248, 250, 252, 255]
 
     # Speed of sound is 343m/s which we need in cm/ns for our distance measure
     SPEED_OF_SOUND_CM_NS = 343 * 100 / 1E9  # 0.0000343 cm / ns
-
 
     MOTOR_A_NAME = 'A'
     MOTOR_B_NAME = 'B'
@@ -1024,7 +1036,7 @@ class InventorHATMini():
 
         # Setup amplifier enable. This mutes the audio by default
         GPIO.setup(self.PI_AMP_EN_PIN, GPIO.OUT, initial=GPIO.LOW if start_muted else GPIO.HIGH)
-        
+
         try:
             self.__ioe = io.SuperIOE(i2c_addr=self.IOE_ADDRESS, perform_reset=True)
         except TimeoutError:
@@ -1040,7 +1052,7 @@ class InventorHATMini():
             cpr = MMME_CPR * motor_gear_ratio
             self.motors = [Motor(self.__ioe, self.IOE_MOTOR_A_PINS), Motor(self.__ioe, self.IOE_MOTOR_B_PINS)]
             self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True),
-                             Encoder(self.__ioe, 2, self.IOE_ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True)]
+                             Encoder(self.__ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=cpr, count_microsteps=True)]
 
         self.servos = None
         if init_servos:
@@ -1057,7 +1069,7 @@ class InventorHATMini():
             except:
                 self.leds = None
                 raise RuntimeError(LED_INIT_FAILED) from None
-    
+
         atexit.register(self.__cleanup)
 
     def __cleanup(self):
@@ -1086,39 +1098,6 @@ class InventorHATMini():
 
         GPIO.cleanup()
 
-        """
-        # Set up the motors and encoders, if the user wants them
-        self.motors = None
-        if init_motors:
-            cpr = MMME_CPR * motor_gear_ratio
-            self.motors = [Motor(self.MOTOR_A_PINS), Motor(self.MOTOR_B_PINS)]
-            # Set the encoders to use PIO 0 and State Machines 0 and 1
-            self.encoders = [Encoder(0, 0, self.ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True),
-                             Encoder(0, 1, self.ENCODER_B_PINS, counts_per_rev=cpr, count_microsteps=True)]
-
-        # Set up the servos, if the user wants them
-        self.servos = None
-        if init_servos:
-            self.servos = [Servo(i) for i in range(self.SERVO_1_PIN, self.SERVO_6_PIN + 1)]
-
-        # Set up the i2c for Qw/st and Breakout Garden
-        self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, 100000)
-
-        # Set up the amp enable
-        self.__amp_en = Pin(self.AMP_EN_PIN, Pin.OUT)
-        self.__amp_en.off()
-
-        self.audio_pwm = PWM(Pin(self.PWM_AUDIO_PIN))
-        self.__volume = self.DEFAULT_VOLUME
-
-        # Set up the user switch
-        self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_DOWN)
-
-        # Set up the WS2812 LEDs, using PIO 0 and State Machine 2
-        self.leds = WS2812(NUM_LEDS, 0, 2, self.LED_DATA_PIN)
-        self.leds.start()
-        """
-
     ##########
     # Button #
     ##########
@@ -1137,11 +1116,7 @@ class InventorHATMini():
     def disable_motors(self):
         """ Disables both motors, allowing them to spin freely.
         """
-        #GPIO.output(self.MOTOR_EN_PIN, False)
-
-    #########
-    # Servo #
-    #########
+        # GPIO.output(self.MOTOR_EN_PIN, False)
 
     def mute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, False)

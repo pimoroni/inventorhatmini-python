@@ -30,7 +30,7 @@ while not board.switch_pressed():
 
         # Read back the servo's angle and use that to set a hue on the neighbouring LED
         hue = ((board.servos[i].value() / SERVO_EXTENT) + 1) * 0.333
-        #board.leds.set_hsv(i + LED_SERVO_1, hue, 1.0, BRIGHTNESS)
+        # board.leds.set_hsv(i + LED_SERVO_1, hue, 1.0, BRIGHTNESS)
 
     time.sleep(1.0 / UPDATES)
 
@@ -39,4 +39,4 @@ for s in board.servos:
     s.disable()
 
 # Turn off the LEDs
-#board.leds.clear()
+# board.leds.clear()

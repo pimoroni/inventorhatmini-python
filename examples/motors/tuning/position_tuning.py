@@ -57,8 +57,20 @@ pos_pid.setpoint = POSITION_EXTENT
 update = 0
 print_count = 0
 
+
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user button is pressed
 while not board.switch_pressed():
+
+    # Record the start time of this loop
+    start_time = time.monotonic()
 
     # Capture the state of the encoder
     capture = enc.capture(UPDATE_RATE)
@@ -88,7 +100,8 @@ while not board.switch_pressed():
         # Set the new position setpoint to be the inverse of the current setpoint
         pos_pid.setpoint = 0.0 - pos_pid.setpoint
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Disable the motor
 m.disable()

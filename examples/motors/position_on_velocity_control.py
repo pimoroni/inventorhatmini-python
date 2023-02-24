@@ -1,8 +1,7 @@
 import time
 import math
 import random
-from pimoroni import PID, NORMAL_DIR  # , REVERSED_DIR
-from inventorhatmini import InventorHATMini, MOTOR_A
+from inventorhatmini import InventorHATMini, MOTOR_A, PID, NORMAL_DIR  # , REVERSED_DIR
 
 """
 An example of how to move a motor smoothly between random positions,
@@ -20,7 +19,7 @@ UPDATES = 100                           # How many times to update the motor per
 UPDATE_RATE = 1 / UPDATES
 TIME_FOR_EACH_MOVE = 1                  # The time to travel between each random value, in seconds
 UPDATES_PER_MOVE = TIME_FOR_EACH_MOVE * UPDATES
-PRINT_DIVIDER = 4                       # How many of the updates should be printed (i.e. 2 would be every other update)
+PRINT_DIVIDER = 6                       # How many of the updates should be printed (i.e. 2 would be every other update)
 
 # Multipliers for the different printed values, so they appear nicely on the Thonny plotter
 ACC_PRINT_SCALE = 2                     # Acceleration multiplier
@@ -31,7 +30,7 @@ MAX_SPEED = 1.0                         # The maximum speed to move the motor at
 INTERP_MODE = 0                         # The interpolating mode between setpoints. STEP (0), LINEAR (1), COSINE (2)
 
 # PID values
-POS_KP = 0.025                          # Position proportional (P) gain
+POS_KP = 0.03                           # Position proportional (P) gain
 POS_KI = 0.0                            # Position integral (I) gain
 POS_KD = 0.0                            # Position derivative (D) gain
 
@@ -41,7 +40,7 @@ VEL_KD = 0.4                            # Velocity derivative (D) gain
 
 
 # Create a new InventorHATMini and get a motor and encoder from it
-board = InventorHATMini(motor_rear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
 m = board.motors[MOTOR_A]
 enc = board.encoders[MOTOR_A]
 
@@ -67,11 +66,23 @@ print_count = 0
 start_value = 0.0
 end_value = random.uniform(-POSITION_EXTENT, POSITION_EXTENT)
 
+
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
+# inconsistent timings when dealing with complex operations or external communication
+def sleep_until(end_time):
+    time_to_sleep = end_time - time.monotonic()
+    if time_to_sleep > 0.0:
+        time.sleep(time_to_sleep)
+
+
 # Continually move the motor until the user button is pressed
 while not board.switch_pressed():
 
+    # Record the start time of this loop
+    start_time = time.monotonic()
+
     # Capture the state of the encoder
-    capture = enc.capture()
+    capture = enc.capture(UPDATE_RATE)
 
     # Calculate how far along this movement to be
     percent_along = min(update / UPDATES_PER_MOVE, 1.0)
@@ -120,7 +131,8 @@ while not board.switch_pressed():
         start_value = end_value
         end_value = random.uniform(-POSITION_EXTENT, POSITION_EXTENT)
 
-    time.sleep(UPDATE_RATE)
+    # Sleep until the next update, accounting for how long the above operations took to perform
+    sleep_until(start_time + UPDATE_RATE)
 
 # Disable the motor
 m.disable()
