@@ -9,9 +9,10 @@ Press "User" to exit the program.
 
 BRIGHTNESS = 0.4      # The brightness of the LEDs
 GPIO_NAMES = ("GP0", "GP1", "GP2", "GP3")
+USE_LEDS = True       # Whether to use the LEDs to show GPIO state (requires code to run with sudo)
 
 # Create a new InventorHATMini
-board = InventorHATMini()
+board = InventorHATMini(init_leds=USE_LEDS)
 
 # Create an input pin object for each GPIO
 inputs = [Pin(i, Pin.IN, Pin.PULL_DOWN) for i in GPIOS]
@@ -31,6 +32,8 @@ while not board.switch_pressed():
             board.leds.set_hsv(i, 0.333, 1.0, BRIGHTNESS)
         else:
             board.leds.set_hsv(i, 0.666, 1.0, BRIGHTNESS)
+
+    board.leds.show()
 
     # Print a new line
     print()

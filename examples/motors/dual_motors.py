@@ -3,7 +3,7 @@ import math
 from inventorhatmini import InventorHATMini
 
 """
-Demonstrates how to control both motors on Inventor 2040 W.
+Demonstrates how to control both motors on Inventor HAT Mini.
 """
 
 # Create a new InventorHATMini

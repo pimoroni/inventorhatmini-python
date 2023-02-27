@@ -397,6 +397,17 @@ class Calibration():
 
             self.apply_default_pairs(default_type)
 
+    def __str__(self):
+        size = self.size()
+        text = f"Calibration(size = {size}, pairs = {{"
+        for i in range(size):
+            pair = self.calibration[i]
+            text += f"{{{pair.pulse}, {pair.value}}}"
+            if i < size - 1:
+                text +=", "
+        text += f"}}, limit_lower = {self.has_lower_limit()}, limit_upper = {self.has_upper_limit()})"
+        return text
+
     def apply_blank_pairs(self, size):
         if size < 0:
             raise ValueError("size out of range. Expected 0 or greater")
@@ -455,13 +466,15 @@ class Calibration():
         if pulse is None:
             return self.calibration[index].pulse
         else:
-            self.calibration[index]._replace(pulse=pulse)
+            value = self.calibration[index].value
+            self.calibration[index] = Pair(pulse, value)
 
     def value(self, index, value=None):
         if value is None:
             return self.calibration[index].value
         else:
-            self.calibration[index]._replace(value=value)
+            pulse = self.calibration[index].pulse
+            self.calibration[index] = Pair(pulse, value)
 
     def first(self, pair=None):
         if pair is None:
@@ -473,13 +486,15 @@ class Calibration():
         if pulse is None:
             return self.calibration[0].pulse
         else:
-            self.calibration[0]._replace(pulse=pulse)
+            value = self.calibration[0].value
+            self.calibration[0] = Pair(pulse, value)
 
     def first_value(self, value=None):
         if value is None:
             return self.calibration[0].value
         else:
-            self.calibration[0]._replace(value=value)
+            pulse = self.calibration[0].pulse
+            self.calibration[0] = Pair(pulse, value)
 
     def last(self, pair=None):
         if pair is None:
@@ -491,13 +506,15 @@ class Calibration():
         if pulse is None:
             return self.calibration[-1].pulse
         else:
-            self.calibration[-1]._replace(pulse=pulse)
+            value = self.calibration[-1].value
+            self.calibration[-1] = Pair(pulse, value)
 
     def last_value(self, value=None):
         if value is None:
             return self.calibration[-1].value
         else:
-            self.calibration[-1]._replace(value=value)
+            pulse = self.calibration[-1].pulse
+            self.calibration[-1] = Pair(pulse, value)
 
     def has_lower_limit(self):
         return self.limit_lower
@@ -730,8 +747,8 @@ class ServoState():
 
 
 class Servo():
-    def __apply_pulse(self, pulse):
-        self.ioe.output(self.pin, ServoState.pulse_to_level(pulse, self.pwm_period, self.pwm_frequency))
+    def __apply_pulse(self, pulse, load, wait_for_load):
+        self.ioe.output(self.pin, ServoState.pulse_to_level(pulse, self.pwm_period, self.pwm_frequency), load, wait_for_load)
 
     def __init__(self, ioe, pin, calibration=ANGULAR, freq=ServoState.DEFAULT_FREQUENCY):
         self.ioe = ioe
@@ -745,35 +762,37 @@ class Servo():
         ioe.set_mode(pin, io.PWM)
         ioe.output(pin, 0, load=True)
 
-    def enable(self):
-        self.__apply_pulse(self.state.enable_with_return())
+    def enable(self, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.enable_with_return(), load, wait_for_load)
 
-    def disable(self):
-        self.__apply_pulse(self.state.disable_with_return())
+    def disable(self, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.disable_with_return(), load, wait_for_load)
 
     def is_enabled(self):
         return self.state.is_enabled()
 
-    def pulse(self, pulse=None):
+    def pulse(self, pulse=None, load=True, wait_for_load=False):
         if pulse is None:
             return self.state.get_pulse()
         else:
-            self.__apply_pulse(self.state.set_pulse_with_return(pulse))
+            self.__apply_pulse(self.state.set_pulse_with_return(pulse), load, wait_for_load)
 
-    def value(self, value=None):
+    def value(self, value=None, load=True, wait_for_load=False):
         if value is None:
             return self.state.get_value()
         else:
-            self.__apply_pulse(self.state.set_value_with_return(value))
+            self.__apply_pulse(self.state.set_value_with_return(value), load, wait_for_load)
 
-    def frequency(self, freq=None):
+    def frequency(self, freq=None, load=True, wait_for_load=False):
         if freq is None:
             return self.pwm_frequency
         else:
             if (freq >= ServoState.MIN_FREQUENCY) and (freq <= ServoState.MAX_FREQUENCY):
-                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=True)
+                self.pwm_period = self.ioe.set_pwm_frequency(self.pwm_frequency, self.pin_p_mod, load=False)
                 if state.is_enabled():
-                    self.__apply_pulse(self.state.get_deadzoned_duty(), self.motor_mode)
+                    self.__apply_pulse(self.state.get_deadzoned_duty(), self.motor_mode, load, wait_for_load)
+                elif load:
+                    self.ioe.pwm_load(self.pin_p_mod)
             else:
                 raise ValueError(f"freq out of range. Expected {ServoState.MIN_FREQUENCY}Hz to {ServoState.MAX_FREQUENCY}Hz")
 
@@ -786,17 +805,17 @@ class Servo():
     def max_value(self):
         return self.state.get_max_value()
 
-    def to_min(self):
-        self.__apply_pulse(self.state.to_min_with_return())
+    def to_min(self, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.to_min_with_return(), load, wait_for_load)
 
-    def to_mid(self):
-        self.__apply_pulse(self.state.to_mid_with_return())
+    def to_mid(self, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.to_mid_with_return(), load, wait_for_load)
 
-    def to_max(self):
-        self.__apply_pulse(self.state.to_max_with_return())
+    def to_max(self, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.to_max_with_return(), load, wait_for_load)
 
-    def to_percent(self, input, in_min=ServoState.ZERO_PERCENT, in_max=ServoState.ONEHUNDRED_PERCENT, value_min=None, value_max=None):
-        self.__apply_pulse(self.state.to_percent_with_return(input, in_min, in_max, value_min, value_max))
+    def to_percent(self, input, in_min=ServoState.ZERO_PERCENT, in_max=ServoState.ONEHUNDRED_PERCENT, value_min=None, value_max=None, load=True, wait_for_load=False):
+        self.__apply_pulse(self.state.to_percent_with_return(input, in_min, in_max, value_min, value_max), load, wait_for_load)
 
     def calibration(self, calibration=None):
         if calibration is None:
@@ -955,6 +974,116 @@ class Encoder():
                        radians_per_second=revolutions_per_second * math.pi * 2.0)
 
 
+class DummyPlasma():
+    def __init__(self):
+        pass
+
+    def set_rgb(self, index, r, g, b, show=True):
+        pass
+
+    def set_hsv(self, index, hue, sat=1.0, val=1.0, show=True):
+        pass
+
+    def get(self, index):
+        pass
+
+    def clear(self, show=True):
+        pass
+
+    def show(self): 
+        pass
+
+
+class Plasma():
+    LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
+    LED_DMA = 10          # DMA channel to use for generating signal (try 10)
+    LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
+    LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
+    LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
+    LED_GAMMA = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2,
+        2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+        6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11,
+        11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18,
+        19, 19, 20, 21, 21, 22, 22, 23, 23, 24, 25, 25, 26, 27, 27, 28,
+        29, 29, 30, 31, 31, 32, 33, 34, 34, 35, 36, 37, 37, 38, 39, 40,
+        40, 41, 42, 43, 44, 45, 46, 46, 47, 48, 49, 50, 51, 52, 53, 54,
+        55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
+        71, 72, 73, 74, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 88, 89,
+        90, 91, 93, 94, 95, 96, 98, 99, 100, 102, 103, 104, 106, 107, 109, 110,
+        111, 113, 114, 116, 117, 119, 120, 121, 123, 124, 126, 128, 129, 131, 132, 134,
+        135, 137, 138, 140, 142, 143, 145, 146, 148, 150, 151, 153, 155, 157, 158, 160,
+        162, 163, 165, 167, 169, 170, 172, 174, 176, 178, 179, 181, 183, 185, 187, 189,
+        191, 193, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220,
+        222, 224, 227, 229, 231, 233, 235, 237, 239, 241, 244, 246, 248, 250, 252, 255]
+    
+    def __init__(self, num_leds, pin):
+        # Setup the PixelStrip object to use with Inventor's LEDs
+        self.leds = PixelStrip(num_leds, pin, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL, self.LED_GAMMA)
+        try:
+            # Attempt to initialise the library
+            self.leds.begin()
+            self.leds.show()
+        except:
+            raise RuntimeError(LED_INIT_FAILED) from None
+    
+    def set_rgb(self, index, r, g, b, show=True):
+        if index < 0 or index >= self.leds.numPixels():
+            raise ValueError("index out of range. Expected 0 to NUM_LEDs - 1");
+
+        self.leds.setPixelColor(index, Color(r, g, b))
+        
+        if show:
+            self.leds.show()
+    
+    def __hsv_to_rgb(h, s, v):
+        if s == 0.0:
+            return v, v, v
+        
+        i = int(h * 6.0)
+        f = (h * 6.0) - i
+        p = v * (1.0 - s)
+        q = v * (1.0 - s * f)
+        t = v * (1.0 - s * (1.0 - f))
+        i = i % 6
+        if i == 0:
+            return v, t, p
+        if i == 1:
+            return q, v, p
+        if i ==2:
+            return p, v, t
+        if i == 3:
+            return p, q, v
+        if i == 4:
+            return t, p, v
+        if i == 5:
+            return v, p, q
+    
+    def set_hsv(self, index, hue, sat=1.0, val=1.0, show=True):
+        if index < 0 or index >= self.leds.numPixels():
+            raise ValueError("index out of range. Expected 0 to NUM_LEDs - 1");
+
+        r, g, b = Plasma.__hsv_to_rgb(hue, sat, val)
+        self.leds.setPixelColor(index, Color(int(r * 255), int(g * 255), int(b * 255)))
+        
+        if show:
+            self.leds.show()
+
+    def get(self, index):
+        # return a tuple
+        pass
+    
+    def clear(self, show=True):
+        for i in range(self.leds.numPixels()):
+            self.leds.setPixelColor(i, Color(0, 0, 0))
+            
+        if show:
+            self.leds.show()
+    
+    def show(self):
+        self.leds.show()
+    
 class InventorHATMini():
     # I2C pins
     PI_I2C_SDA_PIN = 2
@@ -994,29 +1123,6 @@ class InventorHATMini():
     IOE_ADC_2_PIN = 13
     IOE_ADC_3_PIN = 9
     IOE_ADC_4_PIN = 10
-
-    LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
-    LED_DMA = 10          # DMA channel to use for generating signal (try 10)
-    LED_BRIGHTNESS = 255  # Set to 0 for darkest and 255 for brightest
-    LED_INVERT = False    # True to invert the signal (when using NPN transistor level shift)
-    LED_CHANNEL = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
-    LED_GAMMA = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2,
-        2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
-        6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11,
-        11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18,
-        19, 19, 20, 21, 21, 22, 22, 23, 23, 24, 25, 25, 26, 27, 27, 28,
-        29, 29, 30, 31, 31, 32, 33, 34, 34, 35, 36, 37, 37, 38, 39, 40,
-        40, 41, 42, 43, 44, 45, 46, 46, 47, 48, 49, 50, 51, 52, 53, 54,
-        55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-        71, 72, 73, 74, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 88, 89,
-        90, 91, 93, 94, 95, 96, 98, 99, 100, 102, 103, 104, 106, 107, 109, 110,
-        111, 113, 114, 116, 117, 119, 120, 121, 123, 124, 126, 128, 129, 131, 132, 134,
-        135, 137, 138, 140, 142, 143, 145, 146, 148, 150, 151, 153, 155, 157, 158, 160,
-        162, 163, 165, 167, 169, 170, 172, 174, 176, 178, 179, 181, 183, 185, 187, 189,
-        191, 193, 194, 196, 198, 200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220,
-        222, 224, 227, 229, 231, 233, 235, 237, 239, 241, 244, 246, 248, 250, 252, 255]
 
     # Speed of sound is 343m/s which we need in cm/ns for our distance measure
     SPEED_OF_SOUND_CM_NS = 343 * 100 / 1E9  # 0.0000343 cm / ns
@@ -1058,17 +1164,11 @@ class InventorHATMini():
         if init_servos:
             self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
 
-        self.leds = None
         if init_leds:
             # Setup the PixelStrip object to use with Inventor's LEDs
-            self.leds = PixelStrip(NUM_LEDS, self.PI_LED_DATA_PIN, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL, self.LED_GAMMA)
-            try:
-                # Attempt to initialise the library
-                self.leds.begin()
-                self.leds.show()
-            except:
-                self.leds = None
-                raise RuntimeError(LED_INIT_FAILED) from None
+            self.leds = Plasma(NUM_LEDS, self.PI_LED_DATA_PIN)
+        else:
+            self.leds = DummyPlasma()
 
         atexit.register(self.__cleanup)
 

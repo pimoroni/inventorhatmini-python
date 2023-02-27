@@ -23,6 +23,7 @@ PRINT_DIVIDER = 4                       # How many of the updates should be prin
 
 # LED constant
 BRIGHTNESS = 0.4                        # The brightness of the RGB LED
+USE_LEDS = True                         # Whether to show a wave on the LEDs (requires code to run with sudo)
 
 # PID values
 POS_KP = 0.14                           # Position proportional (P) gain
@@ -31,7 +32,7 @@ POS_KD = 0.0022                         # Position derivative (D) gain
 
 
 # Create a new InventorHATMini
-board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=USE_LEDS)
 
 # Set the speed scale of the motors
 board.motors[MOTOR_A].speed_scale(SPEED_SCALE)
@@ -91,10 +92,8 @@ while not board.switch_pressed():
         board.motors[i].speed(vel)
 
     # Update the LEDs
-    """
-    board.leds.set_hsv(LED_GP0, percent_along, 1.0, BRIGHTNESS)
-    board.leds.set_hsv(LED_SERVO_6, percent_along, 1.0, BRIGHTNESS)
-    """
+    board.leds.set_hsv(LED_SERVO_1, percent_along, 1.0, BRIGHTNESS)
+    board.leds.set_hsv(LED_ADC_4, percent_along, 1.0, BRIGHTNESS)
 
     # Print out the current motor values and their setpoints, but only on every multiple
     if print_count == 0:
@@ -124,4 +123,4 @@ for m in board.motors:
     m.disable()
 
 # Turn off the LEDs
-# board.leds.clear()
+board.leds.clear()

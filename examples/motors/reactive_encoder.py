@@ -23,6 +23,7 @@ MAX_DETENT = NUM_LEDS - 1               # The maximum detent that can be counted
 MAX_DRIVE_PERCENT = 0.5                 # The maximum drive force (as a percent) to apply when crossing detents
 
 BRIGHTNESS = 0.4                        # The brightness of the RGB LED
+USE_LEDS = True                         # Whether to show the encoder position on the LEDs (requires code to run with sudo)
 
 # PID values
 POS_KP = 0.14                           # Position proportional (P) gain
@@ -31,7 +32,7 @@ POS_KD = 0.0022                         # Position derivative (D) gain
 
 
 # Create a new InventorHATMini and get a motor and encoder from it
-board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=USE_LEDS)
 m = board.motors[MOTOR_A]
 enc = board.encoders[MOTOR_A]
 
@@ -62,14 +63,12 @@ def detent_change(change):
     print("Detent =", current_detent)
 
     # Convert the current detent to a hue and set the onboard led to it
-    """
     hue = (current_detent - MIN_DETENT) / (MAX_DETENT - MIN_DETENT)
     for i in range(NUM_LEDS):
         if current_detent == i:
             board.leds.set_hsv(i, hue, 1.0, BRIGHTNESS)
         else:
             board.leds.set_hsv(i, hue, 1.0, 0.0)
-    """
 
 
 # Call the function once to set the setpoint and print the value
@@ -126,4 +125,4 @@ while not board.switch_pressed():
 m.disable()
 
 # Turn off the LEDs
-# board.leds.clear()
+board.leds.clear()

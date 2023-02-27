@@ -34,11 +34,12 @@ VEL_KD = 0.4                            # Velocity derivative (D) gain
 BRIGHTNESS = 0.4                        # The brightness of the LEDs
 SPEED_TO_CYCLING = 0.02 / SPEED_SCALE   # The factor to convert between motor speed and LED cycle rate
 BAR_GRADIENT = 0.125                    # The percentage of the colour spectrum to have the LEDs gradient over
-HALF_LEDS = NUM_LEDS / 2
+HALF_LEDS = NUM_LEDS // 2
+USE_LEDS = True                         # Whether to show a pattern on the LEDs whilst driving (requires code to run with sudo)
 
 
 # Create a new InventorHATMini
-board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)
+board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=USE_LEDS)
 
 # Set the speed scale of the motors
 board.motors[LEFT].speed_scale(SPEED_SCALE)
@@ -159,12 +160,10 @@ while not board.switch_pressed():
         offset_r += 1.0
 
     # Update the LED bars
-    """
     for i in range(HALF_LEDS):
         hue = (i / HALF_LEDS) * BAR_GRADIENT
         board.leds.set_hsv(i, hue + offset_l, 1.0, BRIGHTNESS)
         board.leds.set_hsv(NUM_LEDS - i - 1, hue + offset_r, 1.0, BRIGHTNESS)
-    """
 
     # Sleep until the next update, accounting for how long the above operations took to perform
     sleep_until(start_time + UPDATE_RATE)
@@ -174,4 +173,4 @@ for m in board.motors:
     m.disable()
 
 # Turn off the LED bars
-# board.leds.clear()
+board.leds.clear()
