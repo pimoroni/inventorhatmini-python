@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, NORMAL_DIR  # , REVERSED_DIR
+from inventorhatmini import InventorHATMini, MOTOR_A
+from ioexpander.common import NORMAL_DIR  # , REVERSED_DIR
 
 """
 A program that profiles the speed of a motor across its PWM

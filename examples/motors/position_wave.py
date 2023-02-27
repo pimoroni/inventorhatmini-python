@@ -1,6 +1,7 @@
 import time
 import math
-from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_ADC_4, PID, REVERSED_DIR
+from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_ADC_4
+from ioexpander.common import PID, REVERSED_DIR
 
 """
 A demonstration of driving both of Inventor HAT Mini's motor outputs between

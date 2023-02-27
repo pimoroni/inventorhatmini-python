@@ -1,6 +1,5 @@
 from inventorhatmini import InventorHATMini, SERVO_1, SERVO_2, SERVO_3, SERVO_4
-from inventorhatmini import Calibration, ANGULAR, LINEAR, CONTINUOUS
-
+from ioexpander.servo import Calibration, ANGULAR, LINEAR, CONTINUOUS
 
 """
 Shows how to configure Inventor HAT Mini's servos with different

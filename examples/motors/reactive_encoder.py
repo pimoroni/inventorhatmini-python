@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, NUM_LEDS, PID, NORMAL_DIR  # , REVERSED_DIR
+from inventorhatmini import InventorHATMini, MOTOR_A, NUM_LEDS
+from ioexpander.common import PID, NORMAL_DIR  # , REVERSED_DIR
 
 """
 A demonstration of how a motor with an encoder can be used

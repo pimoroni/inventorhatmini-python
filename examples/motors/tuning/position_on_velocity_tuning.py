@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, PID, NORMAL_DIR  # , REVERSED_DIR
+from inventorhatmini import InventorHATMini, MOTOR_A
+from ioexpander.common import PID, NORMAL_DIR  # , REVERSED_DIR
 
 """
 A program to aid in the discovery and tuning of motor PID
