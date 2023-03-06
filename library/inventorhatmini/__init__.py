@@ -3,7 +3,7 @@
 import time
 import atexit
 import RPi.GPIO as GPIO
-from ioexpander import SuperIOE
+from ioexpander import SuperIOE, ADC
 from ioexpander.motor import Motor
 from ioexpander.servo import Servo
 from ioexpander.encoder import Encoder, MMME_CPR
@@ -61,13 +61,11 @@ class InventorHATMini():
 
     # UART / HC-SR04 Ultrasound pins
     PI_UART_TX_TRIG_PIN = 14
-    PI_UART_RX_ECHO_PIN = 25
+    PI_UART_RX_ECHO_PIN = 15
 
-    IOE_ADDRESS = 0x16
+    IOE_ADDRESS = 0x17
 
     # Expander motor driver pins, via DRV8833PWP Dual H-Bridge
-    # IOE_MOTOR_EN_PIN = ?
-    # IOE_MOTOR_FAULT_PIN = ?
     IOE_MOTOR_A_PINS = (20, 19)
     IOE_MOTOR_B_PINS = (16, 15)
 
@@ -84,11 +82,11 @@ class InventorHATMini():
     IOE_ADC_3_PIN = 9
     IOE_ADC_4_PIN = 10
 
-    # Speed of sound is 343m/s which we need in cm/ns for our distance measure
-    SPEED_OF_SOUND_CM_NS = 343 * 100 / 1E9  # 0.0000343 cm / ns
+    # Internal sense pins
+    IOE_VOLTAGE_SENSE = 11
+    IOE_CURRENT_SENSES = [7, 8]
 
-    MOTOR_A_NAME = 'A'
-    MOTOR_B_NAME = 'B'
+    SHUNT_RESISTOR = 0.47
 
     def __init__(self, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
         """ Initialise inventor hat mini's hardware functions
@@ -103,6 +101,21 @@ class InventorHATMini():
         # Setup amplifier enable. This mutes the audio by default
         GPIO.setup(self.PI_AMP_EN_PIN, GPIO.OUT, initial=GPIO.LOW if start_muted else GPIO.HIGH)
 
+        self.__cpr = MMME_CPR * motor_gear_ratio
+        self.__init_motors = init_motors
+        self.__init_servos = init_servos
+        self.reinit()
+
+        if init_leds:
+            # Setup the PixelStrip object to use with Inventor's LEDs, wrapped in a Plasma class
+            self.leds = Plasma(NUM_LEDS, self.PI_LED_DATA_PIN)
+        else:
+            # Setup a dummy Plasma class, so examples don't need to check LED presence
+            self.leds = DummyPlasma()
+
+        atexit.register(self.__cleanup)
+
+    def reinit(self):
         try:
             self.__ioe = SuperIOE(i2c_addr=self.IOE_ADDRESS, perform_reset=True)
         except TimeoutError:
@@ -114,23 +127,18 @@ class InventorHATMini():
 
         self.motors = None
         self.encoders = None
-        if init_motors:
-            cpr = MMME_CPR * motor_gear_ratio
+        if self.__init_motors:
             self.motors = [Motor(self.__ioe, self.IOE_MOTOR_A_PINS), Motor(self.__ioe, self.IOE_MOTOR_B_PINS)]
-            self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=cpr, count_microsteps=True),
-                             Encoder(self.__ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=cpr, count_microsteps=True)]
+            self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
+                             Encoder(self.__ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=self.__cpr, count_microsteps=True)]
 
         self.servos = None
-        if init_servos:
+        if self.__init_servos:
             self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
 
-        if init_leds:
-            # Setup the PixelStrip object to use with Inventor's LEDs
-            self.leds = Plasma(NUM_LEDS, self.PI_LED_DATA_PIN)
-        else:
-            self.leds = DummyPlasma()
-
-        atexit.register(self.__cleanup)
+        self.__ioe.set_mode(self.IOE_VOLTAGE_SENSE, ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
     def __cleanup(self):
         for motor in self.motors:
@@ -143,31 +151,58 @@ class InventorHATMini():
 
         GPIO.cleanup()
 
-    ##########
-    # Button #
-    ##########
     def switch_pressed(self):
         return GPIO.input(self.PI_USER_SW_PIN) != 0
 
-    ########
-    # LEDs #
-    ########
-    """
-    """
+    def enable_motors(self):
+        """ Enables both motors.
+        """
+        if self.motors is not None:
+            for motor in self.motors:
+                motor.enable()
 
-    ##########
-    # Motors #
-    ##########
     def disable_motors(self):
         """ Disables both motors, allowing them to spin freely.
         """
-        # GPIO.output(self.MOTOR_EN_PIN, False)
+        if self.motors is not None:
+            for motor in self.motors:
+                motor.disable()
+
+    def read_voltage(self):
+        return (self.__ioe.input(self.IOE_VOLTAGE_SENSE) * (10 + 3.9)) / 3.9
+
+    def read_motor_current(self, motor):
+        if motor < 0 or motor >= NUM_MOTORS:
+            raise ValueError("motor out or range. Expected MOTOR_A (0) or MOTOR_B (1)")
+
+        return self.__ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
 
     def mute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, False)
 
     def unmute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, True)
+
+    def activate_watchdog(self):
+        self.__ioe.activate_watchdog()
+
+    def deactivate_watchdog(self):
+        self.__ioe.deactivate_watchdog()
+
+    def feed_watchdog(self):
+        self.__ioe.reset_watchdog_counter()
+
+    def watchdog_timeout_occurred(self):
+        return self.__ioe.watchdog_timeout_occurred()
+
+    def clear_watchdog_timeout(self):
+        self.__ioe.clear_watchdog_timeout()
+
+    def is_watchdog_active(self):
+        return self.__ioe.is_watchdog_active()
+
+    def set_watchdog_control(self, divider):
+        self.__ioe.set_watchdog_control(divider)
 
 
 if __name__ == "__main__":
