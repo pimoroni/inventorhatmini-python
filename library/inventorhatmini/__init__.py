@@ -4,9 +4,10 @@ import time
 import atexit
 import RPi.GPIO as GPIO
 from ioexpander import SuperIOE, ADC
-from ioexpander.motor import Motor
+from ioexpander.motor import Motor, MotorState
 from ioexpander.servo import Servo
-from ioexpander.encoder import Encoder, MMME_CPR
+from ioexpander.encoder import Encoder, MMME_CPR, ROTARY_CPR
+from ioexpander.common import NORMAL_DIR
 from inventorhatmini.plasma import Plasma, DummyPlasma
 from inventorhatmini.errors import NO_IOE_MSG, NO_I2C
 
@@ -22,25 +23,25 @@ SERVO_2 = 1
 SERVO_3 = 2
 SERVO_4 = 3
 
-ADC_1 = 0
-ADC_2 = 1
-ADC_3 = 1
-ADC_4 = 2
+GPIO_1 = 0
+GPIO_2 = 1
+GPIO_3 = 1
+GPIO_4 = 2
 
 LED_SERVO_1 = 0
 LED_SERVO_2 = 1
 LED_SERVO_3 = 2
 LED_SERVO_4 = 3
-LED_ADC_1 = 4
-LED_ADC_2 = 5
-LED_ADC_3 = 6
-LED_ADC_4 = 7
+LED_GPIO_1 = 4
+LED_GPIO_2 = 5
+LED_GPIO_3 = 6
+LED_GPIO_4 = 7
 
 
 # Count Constants
 NUM_MOTORS = 2
 NUM_SERVOS = 4
-NUM_ADCS = 4
+NUM_GPIOS = 4
 NUM_LEDS = 8
 
 
@@ -76,15 +77,12 @@ class InventorHATMini():
     # Expander servo pins
     IOE_SERVO_PINS = (23, 24, 25, 22)
 
-    # Expander ADC pins
-    IOE_ADC_1_PIN = 14
-    IOE_ADC_2_PIN = 13
-    IOE_ADC_3_PIN = 9
-    IOE_ADC_4_PIN = 10
+    # Expander GPIO/ADC pins
+    IOE_GPIO_PINS = (14, 13, 9, 10)
 
     # Internal sense pins
     IOE_VOLTAGE_SENSE = 11
-    IOE_CURRENT_SENSES = [7, 8]
+    IOE_CURRENT_SENSES = (7, 8)
 
     SHUNT_RESISTOR = 0.47
 
@@ -173,7 +171,7 @@ class InventorHATMini():
 
     def read_motor_current(self, motor):
         if motor < 0 or motor >= NUM_MOTORS:
-            raise ValueError("motor out or range. Expected MOTOR_A (0) or MOTOR_B (1)")
+            raise ValueError("motor out of range. Expected MOTOR_A (0) or MOTOR_B (1)")
 
         return self.__ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
 
@@ -182,6 +180,100 @@ class InventorHATMini():
 
     def unmute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, True)
+
+    def gpio_mode(self, gpio, mode=None):
+        if gpio < 0 or gpio >= NUM_GPIOS:
+            raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
+
+        if mode is None:
+            return self.__ioe.get_mode(self.IOE_GPIO_PINS[gpio])
+        else:
+            self.__ioe.set_mode(self.IOE_GPIO_PINS[gpio], mode)
+
+    def gpio_value(self, gpio, value=None):
+        if gpio < 0 or gpio >= NUM_GPIOS:
+            raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
+
+        if value is None:
+            return self.__ioe.input(self.IOE_GPIO_PINS[gpio])
+        else:
+            self.__ioe.output(self.IOE_GPIO_PINS[gpio], value)
+
+    def servo_pin_mode(self, servo, mode=None):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= NUM_SERVOS:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        if mode is None:
+            return self.__ioe.get_mode(self.IOE_SERVO_PINS[servo])
+        else:
+            self.__ioe.set_mode(self.IOE_SERVO_PINS[servo], mode)
+
+    def servo_pin_value(self, servo, value=None, load=True, wait_for_load=False):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= NUM_SERVOS:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        if value is None:
+            return self.__ioe.input(self.IOE_SERVO_PINS[servo])
+        else:
+            self.__ioe.output(self.IOE_SERVO_PINS[servo], value, load=load, wait_for_load=wait_for_load)
+
+    def servo_pin_load(self, servo, wait_for_load=True):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= NUM_SERVOS:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.__ioe.pwm_load(module, wait_for_load)
+
+    def servo_pin_frequency(self, servo, frequency, load=True, wait_for_load=True):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= NUM_SERVOS:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.__ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
+
+    def encoder_from_gpios(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
+        if self.encoders is not None:
+            if channel == 1:
+                raise ValueError("channel 1 is already in use by Motor A's encoder.")
+            if channel == 2:
+                raise ValueError("channel 1 is already in use by Motor B's encoder.")
+
+        if channel < 1 or channel > 4:
+            raise ValueError("channel out of range. Expected 1 to 4.")
+
+        if gpio_a < 0 or gpio_a >= NUM_GPIOS:
+            raise ValueError("gpio_a out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
+
+        if gpio_b < 0 or gpio_b >= NUM_GPIOS:
+            raise ValueError("gpio_b out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
+
+        return Encoder(self.__ioe, channel, (self.IOE_GPIO_PINS[gpio_a], self.IOE_GPIO_PINS[gpio_b]), direction=direction, counts_per_rev=counts_per_rev, count_microsteps=count_microsteps)
+
+    def motor_from_servo_pins(self, servo_p, servo_n, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
+                              deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
+        if self.servos is not None:
+            raise ValueError("servo pins are already in use by Servos")
+
+        if servo_p < 0 or servo_p >= NUM_SERVOS:
+            raise ValueError("servo_p out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        if servo_n < 0 or servo_n >= NUM_SERVOS:
+            raise ValueError("servo_n out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        return Motor(self.__ioe, (self.IOE_SERVO_PINS[servo_p], self.IOE_SERVO_PINS[servo_n]), direction=direction,
+                     speed_scale=speed_scale, zeropoint=zeropoint, deadzone=deadzone, freq=freq, mode=mode)
 
     def activate_watchdog(self):
         self.__ioe.activate_watchdog()

@@ -58,6 +58,18 @@ read_voltage()
 read_motor_current(motor)
 mute_audio()
 unmute_audio()
+gpio_mode(gpio)
+gpio_mode(gpio, mode)
+gpio_value(gpio)
+gpio_value(gpio, value)
+servo_pin_mode(servo)
+servo_pin_mode(servo, mode)
+servo_pin_value(servo)
+servo_pin_value(servo, mode, load=True, wait_for_load=False)
+servo_pin_load(servo, wait_for_load=True)
+servo_pin_frequency(servo, frequency, load=True, wait_for_load=True)
+encoder_from_gpios(channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False)
+motor_from_servo_pins(servo_p, servo_n, direction=NORMAL_DIR, speed_scale=DEFAULT_SPEED_SCALE, zeropoint=DEFAULT_ZEROPOINT, deadzone=DEFAULT_DEADZONE, freq=DEFAULT_FREQUENCY, mode=DEFAULT_DECAY_MODE)
 activate_watchdog()
 deactivate_watchdog()
 feed_watchdog()
@@ -86,12 +98,12 @@ Here is the complete list of constants on the `inventorhatmini` module:
 * `SERVO_4` = `3`
 
 
-#### ADC Constants
+#### GPIO Constants
 
-* `ADC_1` = `0`
-* `ADC_2` = `1`
-* `ADC_3` = `2`
-* `ADC_4` = `3`
+* `GPIO_1` = `0`
+* `GPIO_2` = `1`
+* `GPIO_3` = `2`
+* `GPIO_4` = `3`
 
 
 #### LED Constants
@@ -100,15 +112,15 @@ Here is the complete list of constants on the `inventorhatmini` module:
 * `LED_SERVO_2` = `1`
 * `LED_SERVO_3` = `2`
 * `LED_SERVO_4` = `3`
-* `LED_ADC_1` = `4`
-* `LED_ADC_2` = `5`
-* `LED_ADC_3` = `6`
-* `LED_ADC_4` = `7`
+* `LED_GPIO_1` = `4`
+* `LED_GPIO_2` = `5`
+* `LED_GPIO_3` = `6`
+* `LED_GPIO_4` = `7`
 
 
 #### Count Constants
 
 * `NUM_MOTORS` = `2`
 * `NUM_SERVOS` = `4`
-* `NUM_ADCS` = `4`
+* `NUM_GPIOS` = `4`
 * `NUM_LEDS` = `8`

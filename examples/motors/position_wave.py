@@ -1,6 +1,6 @@
 import time
 import math
-from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_ADC_4
+from inventorhatmini import InventorHATMini, NUM_MOTORS, MOTOR_A, MOTOR_B, LED_SERVO_1, LED_GPIO_4
 from ioexpander.common import PID, REVERSED_DIR
 
 """
@@ -94,7 +94,7 @@ while not board.switch_pressed():
 
     # Update the LEDs
     board.leds.set_hsv(LED_SERVO_1, percent_along, 1.0, BRIGHTNESS)
-    board.leds.set_hsv(LED_ADC_4, percent_along, 1.0, BRIGHTNESS)
+    board.leds.set_hsv(LED_GPIO_4, percent_along, 1.0, BRIGHTNESS)
 
     # Print out the current motor values and their setpoints, but only on every multiple
     if print_count == 0:

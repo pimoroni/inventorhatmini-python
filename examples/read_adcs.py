@@ -1,7 +1,6 @@
 import time
-from machine import Pin
-from pimoroni import Analog
-from inventorhatmini import InventorHATMini, ADCS, NUM_ADCS, LED_ADC_1
+from inventorhatmini import InventorHATMini, NUM_GPIOS, LED_GPIO_1
+from ioexpander import ADC
 
 """
 Shows how to initialise and read the 4 ADC headers of Inventor HAT Mini.
@@ -17,27 +16,22 @@ USE_LEDS = True       # Whether to use the LEDs to show ADC state (requires code
 # Create a new InventorHATMini
 board = InventorHATMini(init_leds=USE_LEDS)
 
-# Create an analog object for each ADC
-analogs = [Analog(i) for i in ADCS]
-
-# Create an accompanying pin object to each analog,
-# so that they can be pulled low. This avoids random
-# numbers when nothing is connected to any of the pins.
-pulls = [Pin(i, Pin.IN, Pin.PULL_DOWN) for i in ADCS]
-
+# Setup each GPIO as an analog input
+for i in range(NUM_GPIOS):
+    board.gpio_mode(i, ADC)
 
 # Read the ADCs until the user button is pressed
 while not board.switch_pressed():
 
     # Read each ADC in turn and print its voltage
-    for i in range(NUM_ADCS):
-        voltage = analogs[i].read_voltage()
+    for i in range(NUM_GPIOS):
+        voltage = board.gpio_value(i)
         print(ADC_NAMES[i], " = ", round(voltage, 3), sep="", end=", ")
 
         # Set the neighbouring LED to a colour based on the
         # voltage, with Green for high and Blue for low
         hue = (2.0 - (voltage / 3.3)) * 0.333
-        board.leds.set_hsv(i + LED_ADC_1, hue, 1.0, BRIGHTNESS)
+        board.leds.set_hsv(i + LED_GPIO_1, hue, 1.0, BRIGHTNESS)
 
     # Print a new line
     print()

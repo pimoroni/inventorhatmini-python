@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, GPIOS, NUM_GPIOS
+from inventorhatmini import InventorHATMini, NUM_GPIOS
+from ioexpander import IN  # or IN_PU of a pull-up is wanted
 
 """
 Shows how to initialise and read the 4 GPIO headers of Inventor HAT Mini.
@@ -14,17 +15,17 @@ USE_LEDS = True       # Whether to use the LEDs to show GPIO state (requires cod
 # Create a new InventorHATMini
 board = InventorHATMini(init_leds=USE_LEDS)
 
-# Create an input pin object for each GPIO
-inputs = [Pin(i, Pin.IN, Pin.PULL_DOWN) for i in GPIOS]
-
+# Setup each GPIO as an input
+for i in range(NUM_GPIOS):
+    board.gpio_mode(i, IN)  # or IN_PU of a pull-up is wanted
 
 # Read the GPIOs until the user button is pressed
 while not board.switch_pressed():
 
     # Read each GPIO in turn and print its value
     for i in range(NUM_GPIOS):
-        value = inputs[i].value()
-        print(GPIO_NAMES[i], " = ", inputs[i].value(), sep="", end=", ")
+        value = board.gpio_value(i)
+        print(GPIO_NAMES[i], " = ", value, sep="", end=", ")
 
         # Set the neighbouring LED to a colour based on
         # the input, with Green for high and Blue for low

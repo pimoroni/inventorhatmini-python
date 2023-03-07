@@ -35,9 +35,9 @@ def read_distance(timeout=50, samples=3, offset=190000):
     samples: determines how many readings to average
     offset: Time in ns the measurement takes (prevents over estimates)
     The default offset here is about right for a Raspberry Pi 4.
-    
+
     Returns the measured distance in centimetres as a float.
-    
+
     To give more stable readings, this method will attempt to take several
     readings and return the average distance. You can set the maximum time
     you want it to take before returning a result so you have control over

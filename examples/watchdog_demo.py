@@ -60,13 +60,13 @@ while True:
             if not switch_pressed:
                 print("Switch pressed")
                 switch_pressed = True
-        
+
         # Sleep until the next update, accounting for how long the above operations took to perform
         sleep_until(start_time + UPDATE_RATE)
 
     # The watchdog has reset the board
     print("Reset occurred")
-    
+
     # Reinitialise the parts of InventorHATMini that were reset
     board.reinit()
     print("Reinitialising...")
