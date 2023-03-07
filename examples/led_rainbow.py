@@ -20,6 +20,7 @@ board = InventorHATMini()
 offset = 0.0
 
 
+# Sleep until a specific time in the future. Use this instead of time.sleep() to correct for
 # inconsistent timings when dealing with complex operations or external communication
 def sleep_until(end_time):
     time_to_sleep = end_time - time.monotonic()
