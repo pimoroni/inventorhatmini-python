@@ -2,13 +2,13 @@ import time
 from inventorhatmini import InventorHATMini, NUM_MOTORS  # , MOTOR_A, MOTOR_B, REVERSED_DIR
 
 """
-Demonstrates how to read the angles of Inventor HAT Mini's two encoders.
+Demonstrates how to read the angles of Inventor HAT Mini's two motor encoders.
 
 Press "User" to exit the program.
 """
 
-# Wheel friendly names
-NAMES = ["LEFT", "RIGHT"]
+# Friendly names
+NAMES = ["A", "B"]
 
 # Constants
 GEAR_RATIO = 50                         # The gear ratio of the motor

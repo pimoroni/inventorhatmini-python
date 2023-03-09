@@ -25,8 +25,8 @@ SERVO_4 = 3
 
 GPIO_1 = 0
 GPIO_2 = 1
-GPIO_3 = 1
-GPIO_4 = 2
+GPIO_3 = 2
+GPIO_4 = 3
 
 LED_SERVO_1 = 0
 LED_SERVO_2 = 1
