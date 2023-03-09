@@ -1,5 +1,5 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, MOTOR_B, SERVO_2, SERVO_3
+from inventorhatmini import InventorHATMini, MOTOR_A, MOTOR_B
 from ioexpander.motor import SLOW_DECAY  # , FAST_DECAY
 
 """
@@ -153,7 +153,7 @@ while True:
         for i in range(len(SONG)):
             # Record the start time of this loop
             start_time = time.monotonic()
-        
+
             if check_button_toggle():
                 if SONG[i] == "P":
                     # This is a "pause" note, so stop the motors

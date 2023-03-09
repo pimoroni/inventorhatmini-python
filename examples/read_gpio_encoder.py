@@ -13,7 +13,7 @@ CHANNEL = 3         # The encoder channel to use (1 and 2 are used by Inventor's
 # Create a new InventorHATMini
 board = InventorHATMini(init_leds=False)
 
-# Create an Encoder object using two GPIO pins 
+# Create an Encoder object using two GPIO pins
 enc = board.encoder_from_gpios(CHANNEL, GPIO_1, GPIO_2)
 
 # Uncomment the below line (and the top imports) to
