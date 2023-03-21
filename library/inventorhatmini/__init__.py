@@ -86,9 +86,10 @@ class InventorHATMini():
 
     SHUNT_RESISTOR = 0.47
 
-    def __init__(self, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
+    def __init__(self, address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
         """ Initialise inventor hat mini's hardware functions
         """
+        self.address = address
 
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
@@ -115,7 +116,7 @@ class InventorHATMini():
 
     def reinit(self):
         try:
-            self.__ioe = SuperIOE(i2c_addr=self.IOE_ADDRESS, perform_reset=True)
+            self.__ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
         except TimeoutError:
             raise TimeoutError(NO_IOE_MSG) from None
         except OSError:
