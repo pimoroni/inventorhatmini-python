@@ -77,7 +77,7 @@ while not board.switch_pressed():
 
     # Capture the state of all the encoders
     for i in range(NUM_MOTORS):
-        captures[i] = board.encoders[i].capture(UPDATE_RATE)
+        captures[i] = board.encoders[i].capture()
 
     # Calculate how far along this movement to be
     percent_along = min(update / UPDATES_PER_MOVE, 1.0)

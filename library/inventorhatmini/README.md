@@ -49,7 +49,7 @@ There are several ways these motors can be commanded from code: TODO
 Here is the complete list of functions available on the `InventorHATMini` class:
 
 ```python
-InventorHATMini(motor_gear_ratio=5-, init_motors=True, init_servos=True, init_leds=True, start_muted=False)
+InventorHATMini(motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False)
 reinit()
 switch_pressed()
 enable_motors()

@@ -81,7 +81,7 @@ while not board.switch_pressed():
     start_time = time.monotonic()
 
     # Capture the state of the encoder
-    capture = enc.capture(UPDATE_RATE)
+    capture = enc.capture()
 
     # Calculate the velocity to move the motor closer to the position setpoint
     vel = pos_pid.calculate(capture.degrees, capture.degrees_per_second)

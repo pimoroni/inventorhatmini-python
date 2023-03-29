@@ -76,7 +76,7 @@ while not board.switch_pressed():
     start_time = time.monotonic()
 
     # Capture the state of the encoder
-    capture = enc.capture(UPDATE_RATE)
+    capture = enc.capture()
 
     # Calculate how far along this movement to be
     percent_along = min(update / UPDATES_PER_MOVE, 1.0)

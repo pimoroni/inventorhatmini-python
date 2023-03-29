@@ -91,7 +91,7 @@ while not board.switch_pressed():
     start_time = time.monotonic()
 
     # Capture the state of the encoder
-    capture = enc.capture(UPDATE_RATE)
+    capture = enc.capture()
 
     # Get the current detent's centre angle
     detent_angle = (current_detent * DETENT_SIZE)
