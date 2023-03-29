@@ -2,7 +2,7 @@
 
 import time
 import RPi.GPIO as GPIO
-from ioexpander import SuperIOE, ADC
+from ioexpander import SuperIOE, ADC, OUT
 from ioexpander.motor import Motor, MotorState
 from ioexpander.servo import Servo
 from ioexpander.encoder import Encoder, MMME_CPR, ROTARY_CPR
@@ -266,6 +266,191 @@ class InventorHATMini():
 
         return Motor(self.__ioe, (self.IOE_SERVO_PINS[servo_p], self.IOE_SERVO_PINS[servo_n]), direction=direction,
                      speed_scale=speed_scale, zeropoint=zeropoint, deadzone=deadzone, freq=freq, mode=mode)
+
+    def activate_watchdog(self):
+        self.__ioe.activate_watchdog()
+
+    def deactivate_watchdog(self):
+        self.__ioe.deactivate_watchdog()
+
+    def feed_watchdog(self):
+        self.__ioe.reset_watchdog_counter()
+
+    def watchdog_timeout_occurred(self):
+        return self.__ioe.watchdog_timeout_occurred()
+
+    def clear_watchdog_timeout(self):
+        self.__ioe.clear_watchdog_timeout()
+
+    def is_watchdog_active(self):
+        return self.__ioe.is_watchdog_active()
+
+    def set_watchdog_control(self, divider):
+        self.__ioe.set_watchdog_control(divider)
+
+
+class MotorHATMini():
+    # I2C pins
+    PI_I2C_SDA_PIN = 2
+    PI_I2C_SCL_PIN = 3
+    PI_I2C_INT_PIN = 4
+
+    IOE_ADDRESS = 0x16
+
+    # Expander motor driver pins, via DRV8833PWP Dual H-Bridge
+    IOE_MOTOR_A_PINS = (25, 24)
+    IOE_MOTOR_B_PINS = (19, 16)
+    IOE_MOTOR_C_PINS = (15, 8)
+    IOE_MOTOR_D_PINS = (17, 18)
+
+    # Expander motor encoder pins
+    IOE_ENCODER_A_PINS = (3, 4)
+    IOE_ENCODER_B_PINS = (26, 20)
+    IOE_ENCODER_C_PINS = (1, 2)
+    IOE_ENCODER_D_PINS = (6, 12)
+
+    # Expander servo pins
+    IOE_SERVO_PINS = (14, 22, 21, 7)
+
+    # Internal sense pins
+    IOE_VOLTAGE_SENSE = 13
+    IOE_CURRENT_SENSES = (5, 11, 9, 10)
+
+    IOE_STATUS_LED = 23
+
+    SHUNT_RESISTOR = 0.82
+
+    def __init__(self, address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True):
+        """ Initialise inventor hat mini's hardware functions
+        """
+        self.address = address
+
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+
+        self.__cpr = MMME_CPR * motor_gear_ratio
+        self.__init_motors = init_motors
+        self.__init_servos = init_servos
+        self.reinit()
+
+        atexit.register(self.__cleanup)
+
+    def reinit(self):
+        try:
+            self.__ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
+        except TimeoutError:
+            raise TimeoutError(NO_IOE_MSG) from None
+        except OSError:
+            raise OSError(NO_IOE_MSG) from None
+        except FileNotFoundError:
+            raise RuntimeError(NO_I2C) from None
+        
+        # Mux p0.4 PWM over to PWM 2 Channel 1
+        #self.__ioe.switch_pwm_to_alt(self.IOE_SERVO_PINS[0])
+
+        self.motors = None
+        self.encoders = None
+        if self.__init_motors:
+            self.motors = [Motor(self.__ioe, self.IOE_MOTOR_A_PINS),
+                           Motor(self.__ioe, self.IOE_MOTOR_B_PINS),
+                           Motor(self.__ioe, self.IOE_MOTOR_C_PINS),
+                           Motor(self.__ioe, self.IOE_MOTOR_D_PINS)]
+            self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
+                             Encoder(self.__ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
+                             Encoder(self.__ioe, 3, self.IOE_ENCODER_C_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
+                             Encoder(self.__ioe, 4, self.IOE_ENCODER_D_PINS, counts_per_rev=self.__cpr, count_microsteps=True)]
+
+        self.servos = None
+        if self.__init_servos:
+            self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(4)]
+
+        self.__ioe.set_mode(self.IOE_VOLTAGE_SENSE, ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[2], ADC)
+        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[3], ADC)
+
+        self.__ioe.set_mode(self.IOE_STATUS_LED, OUT, invert=True)
+        
+
+    def __cleanup(self):
+        for motor in self.motors:
+            motor.coast()
+
+        for servo in self.servos:
+            servo.disable()
+
+        GPIO.cleanup()
+
+    def status_led(self, value):
+        self.__ioe.output(self.IOE_STATUS_LED, value)
+
+    def enable_motors(self):
+        """ Enables both motors.
+        """
+        if self.motors is not None:
+            for motor in self.motors:
+                motor.enable()
+
+    def disable_motors(self):
+        """ Disables both motors, allowing them to spin freely.
+        """
+        if self.motors is not None:
+            for motor in self.motors:
+                motor.disable()
+
+    def read_voltage(self):
+        return (self.__ioe.input(self.IOE_VOLTAGE_SENSE) * (10 + 3.9)) / 3.9
+
+    def read_motor_current(self, motor):
+        if motor < 0 or motor >= 4:
+            raise ValueError("motor out of range. Expected MOTOR_A (0) or MOTOR_B (1)")
+
+        return self.__ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
+
+    def servo_pin_mode(self, servo, mode=None):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= NUM_SERVOS:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        if mode is None:
+            return self.__ioe.get_mode(self.IOE_SERVO_PINS[servo])
+        else:
+            self.__ioe.set_mode(self.IOE_SERVO_PINS[servo], mode)
+
+    def servo_pin_value(self, servo, value=None, load=True, wait_for_load=False):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= 4:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        if value is None:
+            return self.__ioe.input(self.IOE_SERVO_PINS[servo])
+        else:
+            self.__ioe.output(self.IOE_SERVO_PINS[servo], value, load=load, wait_for_load=wait_for_load)
+
+    def servo_pin_load(self, servo, wait_for_load=True):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= 4:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.__ioe.pwm_load(module, wait_for_load)
+
+    def servo_pin_frequency(self, servo, frequency, load=True, wait_for_load=True):
+        if self.servos is not None:
+            raise ValueError("servo pin is already in use by a Servo")
+
+        if servo < 0 or servo >= 4:
+            raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
+
+        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.__ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
 
     def activate_watchdog(self):
         self.__ioe.activate_watchdog()
