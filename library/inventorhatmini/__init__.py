@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import time
-import atexit
 import RPi.GPIO as GPIO
 from ioexpander import SuperIOE, ADC
 from ioexpander.motor import Motor, MotorState
@@ -112,8 +111,6 @@ class InventorHATMini():
             # Setup a dummy Plasma class, so examples don't need to check LED presence
             self.leds = DummyPlasma()
 
-        atexit.register(self.__cleanup)
-
     def reinit(self):
         try:
             self.__ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
@@ -139,15 +136,9 @@ class InventorHATMini():
         self.__ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
         self.__ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
-    def __cleanup(self):
-        for motor in self.motors:
-            motor.coast()
-
-        for servo in self.servos:
-            servo.disable()
-
+    def __del__(self):
+        self.__ioe.reset()
         self.leds.clear()
-
         GPIO.cleanup()
 
     def switch_pressed(self):
