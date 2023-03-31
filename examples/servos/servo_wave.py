@@ -8,6 +8,7 @@ An example of applying a wave pattern to a group of servos and the LEDs.
 Press "User" to exit the program.
 """
 
+# Constants
 SPEED = 5             # The speed that the LEDs will cycle at
 BRIGHTNESS = 0.4      # The brightness of the LEDs
 UPDATES = 50          # How many times to update LEDs and Servos per second

@@ -8,10 +8,11 @@ Shows how to initialise and read the 4 ADC headers of Inventor HAT Mini.
 Press "User" to exit the program.
 """
 
-BRIGHTNESS = 0.4      # The brightness of the LEDs
-UPDATES = 10          # How many times to update LEDs per second
-ADC_NAMES = ("A0", "A1", "A2", "A3")
-USE_LEDS = True       # Whether to use the LEDs to show ADC state (requires code to run with sudo)
+# Constants
+BRIGHTNESS = 0.4                        # The brightness of the LEDs
+UPDATES = 10                            # How many times to update LEDs per second
+ADC_NAMES = ("A0", "A1", "A2", "A3")    # Friendly names to give the ADCs
+USE_LEDS = True                         # Whether to use the LEDs to show ADC state (requires code to run with sudo)
 
 # Create a new InventorHATMini
 board = InventorHATMini(init_leds=USE_LEDS)

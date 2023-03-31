@@ -11,6 +11,7 @@ with the help of it's attached encoder and PID control.
 Press "User" to exit the program.
 """
 
+# Constants
 GEAR_RATIO = 50                         # The gear ratio of the motor
 
 DIRECTION = NORMAL_DIR                  # The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)

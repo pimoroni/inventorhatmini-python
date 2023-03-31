@@ -11,8 +11,8 @@ with velocity limits, with the help of it's attached encoder and PID control.
 Press "User" to exit the program.
 """
 
+# Constants
 GEAR_RATIO = 50                         # The gear ratio of the motor
-
 DIRECTION = NORMAL_DIR                  # The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 SPEED_SCALE = 5.4                       # The scaling to apply to the motor's speed to match its real-world speed
 

@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_MOTORS  # , MOTOR_A, MOTOR_B, REVERSED_DIR
+from inventorhatmini import InventorHATMini, NUM_MOTORS  # , MOTOR_A, MOTOR_B
+# from ioexpander.common import REVERSED_DIR
 
 """
 Demonstrates how to read the angles of Inventor HAT Mini's two motor encoders.
@@ -7,11 +8,9 @@ Demonstrates how to read the angles of Inventor HAT Mini's two motor encoders.
 Press "User" to exit the program.
 """
 
-# Friendly names
-NAMES = ["A", "B"]
-
 # Constants
-GEAR_RATIO = 50                         # The gear ratio of the motor
+NAMES = ["A", "B"]      # Friendly names to give the encoders
+GEAR_RATIO = 50         # The gear ratio of the motor
 
 # Create a new InventorHATMini
 board = InventorHATMini(motor_gear_ratio=GEAR_RATIO, init_leds=False)

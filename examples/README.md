@@ -1,14 +1,13 @@
-# Inventor HAT Mini Python Examples <!-- omit in toc -->
+# Inventor HAT Mini Examples <!-- omit in toc -->
 
 - [Function Examples](#function-examples)
   - [Read ADCs](#read-adcs)
+  - [Set GPIOs](#set-gpios)
   - [Read GPIOs](#read-gpios)
-  - [Read Encoders](#read-encoders)
+  - [Read Encoders](#read-encoders)  
   - [Read Internals](#read-internals)
-  - [Read Ultrasound](#read-ultrasound)
   - [LED Rainbow](#led-rainbow)
   - [Reset Inventor](#reset-inventor)
-  - [Watchdog Demo](#watchdog-demo)
 - [Motor Examples](#motor-examples)
   - [Single Motor](#single-motor)
   - [Dual Motors](#dual-motors)
@@ -30,6 +29,16 @@
   - [Simple Easing](#simple-easing)
   - [Servo Wave](#servo-wave)
   - [Calibration](#calibration)
+- [Audio Examples](#audio-examples)
+  - [Motor Song](#motor-song)
+  - [Random Droid](#random-droid)
+- [Extra Examples](#extra-examples)
+  - [GPIO Encoder](#gpio-encoder)
+  - [Set Servo Pins](#set-servo-pins)
+  - [Read Servo Pins](#read-servo-pins)
+  - [Servo Pin Motor](#servo-pin-motor)
+  - [Read Ultrasound](#read-ultrasound)
+  - [Watchdog Reset](#watchdog-reset)
 
 
 ## Function Examples
@@ -40,10 +49,16 @@
 Shows how to initialise and read the 4 ADC headers of Inventor HAT Mini.
 
 
+### Set GPIOs
+[set_gpios.py](set_gpios.py)
+
+Shows how to initialise and 4 GPIO headers of Inventor HAT Mini as outputs and set them.
+
+
 ### Read GPIOs
 [read_gpios.py](read_gpios.py)
 
-Shows how to initialise and read the 4 GPIO headers of Inventor HAT Mini.
+Shows how to initialise the 4 GPIO headers of Inventor HAT Mini as inputs and read them.
 
 
 ### Read Encoders
@@ -56,12 +71,6 @@ Demonstrates how to read the angles of Inventor HAT Mini's two encoders.
 [read_internals.py](read_internals.py)
 
 Shows how to read the internal sensors of Inventor HAT Mini.
-
-
-### Read Ultrasound
-[read_ultrasound.py](read_ultrasound.py)
-
-Control a HC-SR04 style ultrasonic distance sensor using the UART header on InventorHATMini.
 
 
 ### LED Rainbow
@@ -188,3 +197,57 @@ An example of applying a wave pattern to a group of servos and the LEDs.
 [servos/calibration.py](servos/calibration.py)
 
 Shows how to configure Inventor HAT Mini's servos with different common calibrations, as well as a completely custom one.
+
+
+## Audio Examples
+
+### Motor Song
+[audio/motor_song.py](audio/motor_song.py)
+
+A fun example of how to change a motor's frequency to have it play a song.
+
+
+### Random Droid
+[audio/random_droid.py](audio/random_droid.py)
+
+Make your Inventor HAT Mini sound like an Astromech Droid!
+
+This example uses the ttastromech library, for more details see https://pypi.org/project/ttastromech/
+
+
+## Extra Examples
+
+### GPIO Encoder
+[extras/gpio_encoder.py](extras/gpio_encoder.py)
+
+An example of how to read a rotary encoder connected to Inventor HAT Mini's GPIO pins.
+
+
+### Set Servo Pins
+[extras/set_servo_pins.py](extras/set_servo_pins.py)
+
+Shows how to initialise and use Inventor HAT Mini's servo headers as 3.3V outputs and set them.
+
+
+### Read Servo Pins
+[extras/read_servo_pins.py](extras/read_servo_pins.py)
+
+Shows how to initialise and use Inventor HAT Mini's servo headers as 3.3V inputs and read them.
+
+
+### Servo Pin Motor
+[extras/servo_pin_motor.py](extras/servo_pin_motor.py)
+
+Shows how to use Inventor HAT Mini's Servo headers to control an externally connected motor driver.
+
+
+### Read Ultrasound
+[extras/read_ultrasound.py](extras/read_ultrasound.py)
+
+Control a HC-SR04 style ultrasonic distance sensor using the UART header on InventorHATMini.
+
+
+### Watchdog Reset
+[extras/watchdog_reset.py](extras/watchdog_reset.py)
+
+A demonstration of using Inventor HAT Mini's internal watchdog to stop motors from spinning when a simulated code lock-up occurs, by causing a board reset, and recovering from it.

@@ -9,6 +9,7 @@ An example of how to move a servo smoothly between random positions.
 Press "User" to exit the program.
 """
 
+# Constants
 UPDATES = 50            # How many times to update Servos per second
 UPDATE_RATE = 1 / UPDATES
 TIME_FOR_EACH_MOVE = 2  # The time to travel between each random value

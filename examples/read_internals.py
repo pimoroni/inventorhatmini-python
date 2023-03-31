@@ -7,11 +7,13 @@ Shows how to read the internal sensors of Inventor HAT Mini.
 Press "User" to exit the program.
 """
 
-MOTOR_NAMES = ["A", "B"]
+# Constants
+MOTOR_NAMES = ["A", "B"]      # Friendly names to give the encoders
 
 # Create a new InventorHATMini
 board = InventorHATMini(init_leds=False)
 
+# Set the motors spinning so that a current can be measured
 for motor in board.motors:
     motor.duty(1.0)
 
@@ -32,5 +34,6 @@ while not board.switch_pressed():
 
     time.sleep(0.5)
 
+# Disable the motors
 for motor in board.motors:
     motor.disable()

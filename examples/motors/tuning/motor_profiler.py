@@ -7,8 +7,8 @@ A program that profiles the speed of a motor across its PWM
 duty cycle range using the attached encoder for feedback.
 """
 
+# Constants
 GEAR_RATIO = 50                         # The gear ratio of the motor
-
 DIRECTION = NORMAL_DIR                  # The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 SPEED_SCALE = 5.4                       # The scaling to apply to the motor's speed. Set this to the maximum measured speed
 ZERO_POINT = 0.0                        # The duty cycle that corresponds with zero speed when plotting the motor's speed as a straight line
