@@ -1,5 +1,5 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_SERVOS
+from inventorhatmini import InventorHATMini, NUM_SERVOS, LED_SERVO_1
 from ioexpander import IN  # or IN_PU of a pull-up is wanted
 
 """
@@ -31,9 +31,9 @@ while not board.switch_pressed():
         # Set the neighbouring LED to a colour based on
         # the input, with Green for high and Blue for low
         if value:
-            board.leds.set_hsv(i, 0.333, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_SERVO_1, 0.333, 1.0, BRIGHTNESS)
         else:
-            board.leds.set_hsv(i, 0.666, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_SERVO_1, 0.666, 1.0, BRIGHTNESS)
 
     # Print a new line
     print()

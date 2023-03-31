@@ -4,7 +4,7 @@
   - [Read ADCs](#read-adcs)
   - [Set GPIOs](#set-gpios)
   - [Read GPIOs](#read-gpios)
-  - [Read Encoders](#read-encoders)  
+  - [Read Encoders](#read-encoders)
   - [Read Internals](#read-internals)
   - [LED Rainbow](#led-rainbow)
   - [Reset Inventor](#reset-inventor)
@@ -30,6 +30,7 @@
   - [Servo Wave](#servo-wave)
   - [Calibration](#calibration)
 - [Audio Examples](#audio-examples)
+  - [Play Sound](#play-sound)
   - [Motor Song](#motor-song)
   - [Random Droid](#random-droid)
 - [Extra Examples](#extra-examples)
@@ -200,6 +201,12 @@ Shows how to configure Inventor HAT Mini's servos with different common calibrat
 
 
 ## Audio Examples
+
+### Play Sound
+[audio/play_sound.py](audio/play_sound.py)
+
+Play a WAV audio file from your Inventor HAT Mini!
+
 
 ### Motor Song
 [audio/motor_song.py](audio/motor_song.py)

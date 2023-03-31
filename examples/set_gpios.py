@@ -1,5 +1,5 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_GPIOS
+from inventorhatmini import InventorHATMini, NUM_GPIOS, LED_GPIO_1
 from ioexpander import OUT
 
 """
@@ -21,24 +21,24 @@ current_gpio = 0
 
 # Setup each GPIO as an output
 for i in range(NUM_GPIOS):
-    board.gpio_mode(i, OUT)
+    board.gpio_pin_mode(i, OUT)
 
 # Set the GPIOs until the user button is pressed
 while not board.switch_pressed():
 
     # Set each GPIO in turn and print its value
     for i in range(NUM_GPIOS):
-
+        # Set the pin to high if this is the current gpio pin, otherwise low
         value = (i == current_gpio)
-        board.gpio_value(value)
+        board.gpio_pin_value(i, value)
         print(GPIO_NAMES[i], " = ", value, sep="", end=", ")
 
         # Set the neighbouring LED to a colour based on
         # the output, with Green for high and Blue for low
         if value:
-            board.leds.set_hsv(i, 0.333, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_GPIO_1, 0.333, 1.0, BRIGHTNESS)
         else:
-            board.leds.set_hsv(i, 0.666, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_GPIO_1, 0.666, 1.0, BRIGHTNESS)
 
     # Print a new line
     print()
@@ -49,6 +49,10 @@ while not board.switch_pressed():
         current_gpio = 0
 
     time.sleep(0.5)
+
+# Set all the gpio pins back to low
+for i in range(NUM_GPIOS):
+    board.gpio_pin_value(i, False)
 
 # Turn off the LED bars
 board.leds.clear()

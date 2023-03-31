@@ -33,7 +33,7 @@ class Plasma():
             # Attempt to initialise the library
             self.leds.begin()
             self.leds.show()
-        except:
+        except RuntimeError:
             raise RuntimeError(LED_INIT_FAILED) from None
 
     def set_rgb(self, index, r, g, b, show=True):

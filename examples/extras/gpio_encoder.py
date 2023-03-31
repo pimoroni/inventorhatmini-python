@@ -15,7 +15,7 @@ CHANNEL = 3         # The encoder channel to use (1 and 2 are used by Inventor's
 board = InventorHATMini(init_leds=False)
 
 # Create an Encoder object using two GPIO pins
-enc = board.encoder_from_gpios(CHANNEL, GPIO_1, GPIO_2)
+enc = board.encoder_from_gpio_pins(CHANNEL, GPIO_1, GPIO_2)
 
 # Uncomment the below line (and the top imports) to
 # reverse the counting direction of the encoder

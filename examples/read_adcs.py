@@ -19,14 +19,14 @@ board = InventorHATMini(init_leds=USE_LEDS)
 
 # Setup each GPIO as an analog input
 for i in range(NUM_GPIOS):
-    board.gpio_mode(i, ADC)
+    board.gpio_pin_mode(i, ADC)
 
 # Read the ADCs until the user button is pressed
 while not board.switch_pressed():
 
     # Read each ADC in turn and print its voltage
     for i in range(NUM_GPIOS):
-        voltage = board.gpio_value(i)
+        voltage = board.gpio_pin_value(i)
         print(ADC_NAMES[i], " = ", round(voltage, 3), sep="", end=", ")
 
         # Set the neighbouring LED to a colour based on the

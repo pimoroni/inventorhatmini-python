@@ -1,6 +1,7 @@
 import time
+import math
 from inventorhatmini import InventorHATMini, SERVO_2, SERVO_3
-# from ioexpander.common import REVERSED_DIR
+from ioexpander.common import NORMAL_DIR  # REVERSED_DIR
 
 """
 Shows how to use Inventor HAT Mini's Servo headers to control an externally connected motor driver.
@@ -23,7 +24,7 @@ SPEED_EXTENT = 1.0      # How far from zero to drive the motor
 board = InventorHATMini(init_servos=False, init_leds=False)
 
 # Create an Encoder object using two GPIO pins
-motor = board.motor_from_servo_pins(CHANNEL, SERVO_2, SERVO_3, direction=NORMAL_DIR)
+motor = board.motor_from_servo_pins(SERVO_2, SERVO_3, direction=DIRECTION)
 
 
 offset = 0.0
@@ -46,7 +47,7 @@ while not board.switch_pressed():
     offset += SPEED / 1000.0
 
     # Update the motor
-    angle = (i + offset) * math.pi
+    angle = offset * math.pi
     motor.speed(math.sin(angle) * SPEED_EXTENT)
 
     # Sleep until the next update, accounting for how long the above operations took to perform

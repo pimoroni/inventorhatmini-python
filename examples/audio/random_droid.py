@@ -12,7 +12,7 @@ To install enter the following on the command line: pip install ttastromech
 Press "User" to play a random word out of the speaker.
 """
 
-# Constnats
+# Constants
 MIN_WORD_LENGTH = 3     # The smallest word size
 MAX_WORD_LENGTH = 10    # The largest word size
 WAIT_TIME = 0.25        # The time (in seconds) to wait after playing a word, before accepting user input again
@@ -24,14 +24,14 @@ droid = TTAstromech()
 
 # Generate the characters from `c1` to `c2`, inclusive.
 def char_range(c1, c2):
-    for c in range(ord(c1), ord(c2)+1):
+    for c in range(ord(c1), ord(c2) + 1):
         yield chr(c)
 
 
 # Generate a random word from the letters a to z.
 def random_string(word_length=5, no_repeat=True):
     chars = list(char_range("a", "z"))
-    word =""
+    word = ""
     char_count = 0
     while char_count != word_length:
         char = chars[random.randint(0, 25)]
@@ -40,7 +40,7 @@ def random_string(word_length=5, no_repeat=True):
         else:
             word += char
             char_count += 1
-    print(word)
+    print("Saying:", word)
     return word
 
 

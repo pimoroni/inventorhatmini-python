@@ -1,5 +1,5 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_SERVOS
+from inventorhatmini import InventorHATMini, NUM_SERVOS, LED_SERVO_1
 from ioexpander import OUT
 
 """
@@ -28,17 +28,17 @@ while not board.switch_pressed():
 
     # Set each servos in turn and print its value
     for i in range(NUM_SERVOS):
-
+        # Set the pin to high if this is the current servo pin, otherwise low
         value = (i == current_servo)
-        board.servo_pin_value(value)
+        board.servo_pin_value(i, value)
         print(SERVO_NAMES[i], " = ", value, sep="", end=", ")
 
         # Set the neighbouring LED to a colour based on
         # the output, with Green for high and Blue for low
         if value:
-            board.leds.set_hsv(i, 0.333, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_SERVO_1, 0.333, 1.0, BRIGHTNESS)
         else:
-            board.leds.set_hsv(i, 0.666, 1.0, BRIGHTNESS)
+            board.leds.set_hsv(i + LED_SERVO_1, 0.666, 1.0, BRIGHTNESS)
 
     # Print a new line
     print()
@@ -49,6 +49,10 @@ while not board.switch_pressed():
         current_servo = 0
 
     time.sleep(0.5)
+
+# Set all the servo pins back to low
+for i in range(NUM_SERVOS):
+    board.servo_pin_value(i, False)
 
 # Turn off the LED bars
 board.leds.clear()

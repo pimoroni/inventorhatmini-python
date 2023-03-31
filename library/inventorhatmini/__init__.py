@@ -182,7 +182,7 @@ class InventorHATMini():
     def unmute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, True)
 
-    def gpio_mode(self, gpio, mode=None):
+    def gpio_pin_mode(self, gpio, mode=None):
         if gpio < 0 or gpio >= NUM_GPIOS:
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
@@ -191,7 +191,7 @@ class InventorHATMini():
         else:
             self.__ioe.set_mode(self.IOE_GPIO_PINS[gpio], mode)
 
-    def gpio_value(self, gpio, value=None):
+    def gpio_pin_value(self, gpio, value=None):
         if gpio < 0 or gpio >= NUM_GPIOS:
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
@@ -244,7 +244,7 @@ class InventorHATMini():
         module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
         self.__ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
 
-    def encoder_from_gpios(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
+    def encoder_from_gpio_pins(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
         if self.encoders is not None:
             if channel == 1:
                 raise ValueError("channel 1 is already in use by Motor A's encoder.")
