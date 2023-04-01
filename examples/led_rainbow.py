@@ -40,7 +40,7 @@ while not board.switch_pressed():
     # Update all the LEDs
     for i in range(NUM_LEDS):
         hue = float(i) / NUM_LEDS
-        board.leds.set_hsv(i, hue + offset, 1.0, BRIGHTNESS, slow=AUTO_SHOW)
+        board.leds.set_hsv(i, hue + offset, 1.0, BRIGHTNESS, show=AUTO_SHOW)
 
     # If the LEDs were not updated when they were set, update them all now
     if not AUTO_SHOW:
