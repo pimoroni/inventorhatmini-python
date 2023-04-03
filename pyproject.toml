@@ -97,6 +97,10 @@ skip = """
 
 [tool.isort]
 line_length = 200
+skip = [
+    'examples',
+    '.tox'
+]
 
 [tool.check-manifest]
 ignore = [

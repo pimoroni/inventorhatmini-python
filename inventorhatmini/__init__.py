@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
-import time
 import atexit
+import time
+
 import RPi.GPIO as GPIO
-from ioexpander import SuperIOE, ADC
+from ioexpander import ADC, SuperIOE
+from ioexpander.common import NORMAL_DIR
+from ioexpander.encoder import MMME_CPR, ROTARY_CPR, Encoder
 from ioexpander.motor import Motor, MotorState
 from ioexpander.servo import Servo
-from ioexpander.encoder import Encoder, MMME_CPR, ROTARY_CPR
-from ioexpander.common import NORMAL_DIR
-from inventorhatmini.plasma import Plasma, DummyPlasma
-from inventorhatmini.errors import NO_IOE_MSG, NO_I2C
+
+from inventorhatmini.errors import NO_I2C, NO_IOE_MSG
+from inventorhatmini.plasma import DummyPlasma, Plasma
 
 __version__ = '0.0.1'
 
