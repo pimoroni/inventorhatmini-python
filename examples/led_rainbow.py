@@ -12,6 +12,7 @@ SPEED = 5           # The speed that the LEDs will cycle at
 BRIGHTNESS = 0.4    # The brightness of the LEDs
 UPDATES = 50        # How many times the LEDs will be updated per second
 UPDATE_RATE = 1 / UPDATES
+AUTO_SHOW = True    # Whether to update each LED as they are set
 
 # Create a new InventorHATMini
 board = InventorHATMini()
@@ -39,7 +40,11 @@ while not board.switch_pressed():
     # Update all the LEDs
     for i in range(NUM_LEDS):
         hue = float(i) / NUM_LEDS
-        board.leds.set_hsv(i, hue + offset, 1.0, BRIGHTNESS)
+        board.leds.set_hsv(i, hue + offset, 1.0, BRIGHTNESS, show=AUTO_SHOW)
+
+    # If the LEDs were not updated when they were set, update them all now
+    if not AUTO_SHOW:
+        board.leds.show()
 
     # Sleep until the next update, accounting for how long the above operations took to perform
     sleep_until(start_time + UPDATE_RATE)

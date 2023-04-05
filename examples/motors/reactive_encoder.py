@@ -10,8 +10,8 @@ force-feedback for arbitrary detents and end stops.
 Press "User" to exit the program.
 """
 
+# Constants
 GEAR_RATIO = 50                         # The gear ratio of the motor
-
 DIRECTION = NORMAL_DIR                  # The direction to spin the motor in. NORMAL_DIR (0), REVERSED_DIR (1)
 SPEED_SCALE = 5.4                       # The scaling to apply to the motor's speed to match its real-world speed
 

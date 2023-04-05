@@ -10,10 +10,9 @@ positions, with the help of their attached encoders and PID control.
 Press "User" to exit the program.
 """
 
-ENCODER_NAMES = ["A", "B"]
-
+# Constants
+ENCODER_NAMES = ["A", "B"]              # Friendly names to give the encoders
 GEAR_RATIO = 50                         # The gear ratio of the motors
-
 SPEED_SCALE = 5.4                       # The scaling to apply to each motor's speed to match its real-world speed
 
 UPDATES = 100                           # How many times to update the motor per second

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import time
-import atexit
 import RPi.GPIO as GPIO
 from ioexpander import SuperIOE, ADC
 from ioexpander.motor import Motor, MotorState
@@ -112,8 +111,6 @@ class InventorHATMini():
             # Setup a dummy Plasma class, so examples don't need to check LED presence
             self.leds = DummyPlasma()
 
-        atexit.register(self.__cleanup)
-
     def reinit(self):
         try:
             self.__ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
@@ -139,15 +136,9 @@ class InventorHATMini():
         self.__ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
         self.__ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
-    def __cleanup(self):
-        for motor in self.motors:
-            motor.coast()
-
-        for servo in self.servos:
-            servo.disable()
-
+    def __del__(self):
+        self.__ioe.reset()
         self.leds.clear()
-
         GPIO.cleanup()
 
     def switch_pressed(self):
@@ -182,7 +173,7 @@ class InventorHATMini():
     def unmute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, True)
 
-    def gpio_mode(self, gpio, mode=None):
+    def gpio_pin_mode(self, gpio, mode=None):
         if gpio < 0 or gpio >= NUM_GPIOS:
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
@@ -191,7 +182,7 @@ class InventorHATMini():
         else:
             self.__ioe.set_mode(self.IOE_GPIO_PINS[gpio], mode)
 
-    def gpio_value(self, gpio, value=None):
+    def gpio_pin_value(self, gpio, value=None):
         if gpio < 0 or gpio >= NUM_GPIOS:
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
@@ -244,7 +235,7 @@ class InventorHATMini():
         module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
         self.__ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
 
-    def encoder_from_gpios(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
+    def encoder_from_gpio_pins(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
         if self.encoders is not None:
             if channel == 1:
                 raise ValueError("channel 1 is already in use by Motor A's encoder.")
