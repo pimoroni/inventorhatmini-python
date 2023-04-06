@@ -82,7 +82,7 @@ exclude = [
     'build',
     'dist'
 ]
-line-length = 200
+line-length = 250
 
 [tool.codespell]
 skip = """
@@ -95,7 +95,7 @@ skip = """
 """
 
 [tool.isort]
-line_length = 200
+line_length = 250
 skip = [
     'examples',
     '.tox'
