@@ -305,7 +305,7 @@ if __name__ == "__main__":
                 for i in range(NUM_LEDS):
                     board.leds.set_rgb(i, 0, 255, 0, show=False)
                 board.leds.show()
-                board.motor[MOTOR_A].full_positive()
+                board.motors[MOTOR_A].full_positive()
                 board.servos[SERVO_1].value(20)
             else:
                 print("User Switch released")
