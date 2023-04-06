@@ -1,19 +1,19 @@
-# Inventor HAT Mini Library
+# Inventor HAT Mini Library <!-- omit in toc -->
 
 This is the library for controlling the [Pimoroni Inventor HAT Mini](https://pimoroni.com/inventorhatmini) for the Raspberry Pi SBC.
 
 
-## Table of Content
+## Table of Content <!-- omit in toc -->
 - [Getting Started](#getting-started)
 - [Reading the User Button](#reading-the-user-button)
 - [Motors](#motors)
 - [Function Reference](#function-reference)
 - [Constants Reference](#constants-reference)
-  - [Motor Constants](#motor-constants)
-  - [Servo Constants](#servo-constants)
-  - [ADC Constants](#adc-constants)
-  - [LED Constants](#led-constants)
-  - [Count Constants](#count-constants)
+    - [Motor Constants](#motor-constants)
+    - [Servo Constants](#servo-constants)
+    - [GPIO Constants](#gpio-constants)
+    - [LED Constants](#led-constants)
+    - [Count Constants](#count-constants)
 
 
 ## Getting Started
@@ -49,7 +49,7 @@ There are several ways these motors can be commanded from code: TODO
 Here is the complete list of functions available on the `InventorHATMini` class:
 
 ```python
-InventorHATMini(motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False)
+InventorHATMini(address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False)
 reinit()
 switch_pressed()
 enable_motors()
@@ -58,17 +58,17 @@ read_voltage()
 read_motor_current(motor)
 mute_audio()
 unmute_audio()
-gpio_mode(gpio)
-gpio_mode(gpio, mode)
-gpio_value(gpio)
-gpio_value(gpio, value)
+gpio_pin_mode(gpio)
+gpio_pin_mode(gpio, mode)
+gpio_pin_value(gpio)
+gpio_pin_value(gpio, value)
 servo_pin_mode(servo)
 servo_pin_mode(servo, mode)
 servo_pin_value(servo)
 servo_pin_value(servo, mode, load=True, wait_for_load=False)
 servo_pin_load(servo, wait_for_load=True)
 servo_pin_frequency(servo, frequency, load=True, wait_for_load=True)
-encoder_from_gpios(channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False)
+encoder_from_gpio_pins(channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False)
 motor_from_servo_pins(servo_p, servo_n, direction=NORMAL_DIR, speed_scale=DEFAULT_SPEED_SCALE, zeropoint=DEFAULT_ZEROPOINT, deadzone=DEFAULT_DEADZONE, freq=DEFAULT_FREQUENCY, mode=DEFAULT_DECAY_MODE)
 activate_watchdog()
 deactivate_watchdog()

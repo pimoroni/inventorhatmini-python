@@ -291,11 +291,9 @@ class InventorHATMini():
 
 
 if __name__ == "__main__":
-    board = InventorHATMini(init_leds=False, start_muted=True)
+    board = InventorHATMini(start_muted=True)
 
     print("Inventor HAT Mini Function Test")
-
-    # time.sleep(2.0)
 
     last_state = False
     while True:
@@ -306,19 +304,19 @@ if __name__ == "__main__":
                 board.unmute_audio()
                 if board.leds is not None:
                     for i in range(board.leds.numPixels()):
-                        board.leds.setPixelColor(i, 0x00FF00)
+                        board.leds.set_rgb(i, 0, 255, 0, show=False)
                     board.leds.show()
-                board.motor_a.full_positive()
-                board.servo_1.value(20)
+                board.motor[MOTOR_A].full_positive()
+                board.servos[SERVO_1].value(20)
             else:
                 print("User Switch released")
                 board.mute_audio()
                 if board.leds is not None:
                     for i in range(board.leds.numPixels()):
-                        board.leds.setPixelColor(i, 0xFF0000)
+                        board.leds.set_rgb(i, 255, 0, 0, show=False)
                     board.leds.show()
-                board.motor_a.coast()
-                board.servo_1.value(-20)
+                board.motors[MOTOR_A].coast()
+                board.servos[SERVO_1].value(-20)
 
         last_state = state
 
