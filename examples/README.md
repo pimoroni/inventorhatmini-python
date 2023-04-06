@@ -24,7 +24,7 @@
   - [Velocity Tuning](#velocity-tuning)
   - [Position on Velocity Tuning](#position-on-velocity-tuning)
 - [Servo Examples](#servo-examples)
-  - [Single Servos](#single-servo)
+  - [Single Servo](#single-servo)
   - [Multiple Servos](#multiple-servos)
   - [Simple Easing](#simple-easing)
   - [Servo Wave](#servo-wave)

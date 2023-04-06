@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import time
+
 import RPi.GPIO as GPIO
-from ioexpander import SuperIOE, ADC
+from ioexpander import ADC, SuperIOE
+from ioexpander.common import NORMAL_DIR
+from ioexpander.encoder import MMME_CPR, ROTARY_CPR, Encoder
 from ioexpander.motor import Motor, MotorState
 from ioexpander.servo import Servo
-from ioexpander.encoder import Encoder, MMME_CPR, ROTARY_CPR
-from ioexpander.common import NORMAL_DIR
-from inventorhatmini.plasma import Plasma, DummyPlasma
-from inventorhatmini.errors import NO_IOE_MSG, NO_I2C
+
+from inventorhatmini.errors import NO_I2C, NO_IOE_MSG
+from inventorhatmini.plasma import DummyPlasma, Plasma
 
 __version__ = '0.0.1'
 
@@ -290,11 +292,9 @@ class InventorHATMini():
 
 
 if __name__ == "__main__":
-    board = InventorHATMini(init_leds=False, start_muted=True)
+    board = InventorHATMini(start_muted=True)
 
     print("Inventor HAT Mini Function Test")
-
-    # time.sleep(2.0)
 
     last_state = False
     while True:
@@ -303,21 +303,19 @@ if __name__ == "__main__":
             if state:
                 print("User Switch pressed")
                 board.unmute_audio()
-                if board.leds is not None:
-                    for i in range(board.leds.numPixels()):
-                        board.leds.setPixelColor(i, 0x00FF00)
-                    board.leds.show()
-                board.motor_a.full_positive()
-                board.servo_1.value(20)
+                for i in range(NUM_LEDS):
+                    board.leds.set_rgb(i, 0, 255, 0, show=False)
+                board.leds.show()
+                board.motors[MOTOR_A].full_positive()
+                board.servos[SERVO_1].value(20)
             else:
                 print("User Switch released")
                 board.mute_audio()
-                if board.leds is not None:
-                    for i in range(board.leds.numPixels()):
-                        board.leds.setPixelColor(i, 0xFF0000)
-                    board.leds.show()
-                board.motor_a.coast()
-                board.servo_1.value(-20)
+                for i in range(NUM_LEDS):
+                    board.leds.set_rgb(i, 255, 0, 0, show=False)
+                board.leds.show()
+                board.motors[MOTOR_A].coast()
+                board.servos[SERVO_1].value(-20)
 
         last_state = state
 

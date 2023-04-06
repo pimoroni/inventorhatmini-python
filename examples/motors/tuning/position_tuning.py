@@ -23,7 +23,7 @@ MOVEMENT_WINDOW = 2.0                   # The time (in seconds) between each new
 PRINT_DIVIDER = 1                       # How many of the updates should be printed (i.e. 2 would be every other update)
 
 # Multipliers for the different printed values, so they appear nicely on the Thonny plotter
-SPD_PRINT_SCALE = 10                    # Driving Speed multipler
+SPD_PRINT_SCALE = 10                    # Driving Speed multiplier
 
 POSITION_EXTENT = 90                    # How far from zero to move the motor, in degrees
 

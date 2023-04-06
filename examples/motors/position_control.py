@@ -24,7 +24,7 @@ UPDATES_PER_MOVE = TIME_FOR_EACH_MOVE * UPDATES
 PRINT_DIVIDER = 4                       # How many of the updates should be printed (i.e. 2 would be every other update)
 
 # Multipliers for the different printed values, so they appear nicely on the Thonny plotter
-SPD_PRINT_SCALE = 20                    # Driving Speed multipler
+SPD_PRINT_SCALE = 20                    # Driving Speed multiplier
 
 POSITION_EXTENT = 180                   # How far from zero to move the motor, in degrees
 INTERP_MODE = 2                         # The interpolating mode between setpoints. STEP (0), LINEAR (1), COSINE (2)

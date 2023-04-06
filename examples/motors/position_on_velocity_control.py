@@ -24,7 +24,7 @@ PRINT_DIVIDER = 6                       # How many of the updates should be prin
 
 # Multipliers for the different printed values, so they appear nicely on the Thonny plotter
 ACC_PRINT_SCALE = 2                     # Acceleration multiplier
-SPD_PRINT_SCALE = 40                    # Driving Speed multipler
+SPD_PRINT_SCALE = 40                    # Driving Speed multiplier
 
 POSITION_EXTENT = 180                   # How far from zero to move the motor, in degrees
 MAX_SPEED = 1.0                         # The maximum speed to move the motor at, in revolutions per second
