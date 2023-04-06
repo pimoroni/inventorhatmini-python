@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import time
+
 import RPi.GPIO as GPIO
 from ioexpander import ADC, SuperIOE
 from ioexpander.common import NORMAL_DIR
