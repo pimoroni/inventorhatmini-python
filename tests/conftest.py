@@ -35,12 +35,3 @@ def rpi_ws281x():
     sys.modules['rpi_ws281x'] = rpi_ws281x
     yield rpi_ws281x
     del sys.modules['rpi_ws281x']
-
-
-@pytest.fixture(scope='function', autouse=False)
-def atexit():
-    """Mock atexit module."""
-    atexit = mock.MagicMock()
-    sys.modules['atexit'] = atexit
-    yield atexit
-    del sys.modules['atexit']

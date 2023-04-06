@@ -37,8 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "pimoroni-ioexpander",
-    "rpi_ws281x",
-    "evdev"
+    "rpi_ws281x"
 ]
 
 [project.urls]
