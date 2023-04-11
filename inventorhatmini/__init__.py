@@ -79,7 +79,7 @@ class InventorHATMini():
     IOE_SERVO_PINS = (23, 24, 25, 22)
 
     # Expander GPIO/ADC pins
-    IOE_GPIO_PINS = (14, 13, 9, 10)
+    IOE_GPIO_PINS = (14, 13, 9, 18)
 
     # Internal sense pins
     IOE_VOLTAGE_SENSE = 11
