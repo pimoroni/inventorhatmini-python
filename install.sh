@@ -95,7 +95,9 @@ function apt_pkg_install {
 }
 
 function pip_pkg_install {
-	PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring $PYTHON -m pip install --upgrade "$@"
+	# Sadly have to run this as sudo in order to have the package be usable when running code with sudo.
+	# This is needed for the samples that drive the onboard LEDs using the rpi_ws281x package
+	PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring sudo $PYTHON -m pip install --upgrade "$@"
 }
 
 while [[ $# -gt 0 ]]; do
