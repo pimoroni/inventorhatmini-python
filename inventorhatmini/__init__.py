@@ -140,7 +140,6 @@ class InventorHATMini():
 
     def __del__(self):
         self.__ioe.reset()
-        self.leds.clear()
         GPIO.cleanup()
 
     def switch_pressed(self):
