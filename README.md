@@ -5,6 +5,11 @@
 [![PyPi Package](https://img.shields.io/pypi/v/inventorhatmini.svg)](https://pypi.python.org/pypi/inventorhatmini)
 [![Python Versions](https://img.shields.io/pypi/pyversions/inventorhatmini.svg)](https://pypi.python.org/pypi/inventorhatmini)
 
+A versatile motor, servo and audio driver HAT for Raspberry Pi. Bring your mechanical inventions, creations and contraptions to life!
+
+**Buy it from:** https://shop.pimoroni.com/products/inventor-hat-mini
+
+
 # Pre-requisites
 
 You must enable:
@@ -13,13 +18,15 @@ You must enable:
 
 You can optionally run `sudo raspi-config` or the graphical Raspberry Pi Configuration UI to enable interfaces.
 
-# Installing
+# Installation
+
+## Installing
 
 **Stable library (only) from PyPi:**
 
 * Just run `sudo python3 -m pip install inventorhatmini`
 
-This will install the library under the root user, which is required to use Inventor HAT Mini's RGB LEDs, which rely on the [rpi_ws281x package](https://pypi.org/project/rpi-ws281x/)
+This will install the library under the root user, which is required to use Inventor HAT Mini's RGB LEDs, which rely on the [rpi_ws281x package](https://pypi.org/project/rpi-ws281x/).
 
 In some cases you may need to install pip with: `sudo apt install python3-pip`
 
@@ -35,13 +42,21 @@ In some cases you may need to install pip with: `sudo apt install python3-pip`
 * `cd inventorhatmini-python`
 * `./install.sh --unstable`
 
-# Examples and Usage
+## Uninstalling
 
-There are many examples to get you started with your Inventor HAT Mini. With the library installed on your Raspberry Pi, these can be found in the `~/Pimoroni/inventorhatmini/examples` directory. Details about what each one does can be found in the [examples readme](/examples/README.md).
+To uninstall the library:
 
-To take Inventor HAT Mini further, the full API is described in the [library reference](/REFERENCE.md)
+* Just run `python3 -m pip uninstall inventorhatmini`
 
-# Configuring Audio
+Or if you have grabbed the library from Github:
+
+* `cd inventorhatmini-python`
+* `./uninstall.sh`
+
+
+## Configuring
+
+### Audio
 
 To use the audio output of InventorHATMini you will need to modify the `/boot/config.txt` file of your Raspberry Pi. To do this run `sudo nano /boot/config.txt` to open a terminal text editor.
 
@@ -53,7 +68,7 @@ There may the line `dtoverlay=vc4-kms-v3d`. Modify this to be `dtoverlay=vc4-kms
 
 When you are finished modifying the file, press CTRL+X on your keyboard, then `y` when asked to `Save modified buffer?`.
 
-# Configuring I2C
+### I2C
 
 To get the most out of your Inventor HAT Mini it is recommended to run your Pi with a higher I2C baudrate than the default 100KHz. This can be done by modifying the `/boot/config.txt/` file of your Raspberry Pi. To do this run `sudo nano /boot/config.txt` to open a terminal text editor.
 
@@ -61,13 +76,8 @@ Within the editor navigate to the line `dtparam=i2c_arm=on`. If this says `off` 
 
 When you are finished modifying the file, press CTRL+X on your keyboard, then Y when asked to `Save modified buffer?`.
 
-# Uninstalling
+# Examples and Usage
 
-To uninstall the library:
+There are many examples to get you started with your Inventor HAT Mini. With the library installed on your Raspberry Pi, these can be found in the `~/Pimoroni/inventorhatmini/examples` directory. Details about what each one does can be found in the [examples readme](/examples/README.md).
 
-* Just run `python3 -m pip uninstall inventorhatmini`
-
-Or if you have grabbed the library from Github:
-
-* `cd inventorhatmini-python`
-* `./uninstall.sh`
+To take Inventor HAT Mini further, the full API is described in the [library reference](/REFERENCE.md).
