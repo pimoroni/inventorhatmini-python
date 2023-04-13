@@ -143,7 +143,7 @@ The expected value is either `0` or `1`, or `True` or `False`.
 
 ### As Encoder
 
-In addition to the input and output functions of GPIO pins, they can also be paired together to read rotary encoders like those used on dials or for motor feedback. Up to two encoders are supported in this way. This is in addtion to the two encoders already in use by the motor connectors.
+In addition to the input and output functions of GPIO pins, they can also be paired together to read rotary encoders like those used on dials or for motor feedback. Up to two encoders are supported in this way. This is in addition to the two encoders already in use by the motor connectors.
 
 To start using GPIO pins for an encoder, first import their handy constants:
 

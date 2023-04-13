@@ -12,11 +12,11 @@ Under the hood Plasma uses the [rpi_ws281x package](https://pypi.org/project/rpi
 - [Clear all LEDs](#clear-all-leds)
 - [Delayed Showing](#delayed-showing)
 - [Function Reference](#function-reference)
-- [DummyPlasma](#dummyplasma)
+  - [DummyPlasma](#dummyplasma)
 
 ## Getting Started
 
-`InventorHATMini` automatically creates a `Plasma` instance, accessable by `board.leds`. Instructions for creating a standalone instance are provided below for completeness.
+`InventorHATMini` automatically creates a `Plasma` instance, accessible by `board.leds`. Instructions for creating a standalone instance are provided below for completeness.
 
 To construct a new `Plasma` instance, specify the number of LEDs, and the GPIO pin to use. See [GPIO Usage](https://github.com/rpi-ws281x/rpi-ws281x-python/tree/master/library#gpio-usage) for details on what pins are supported.
 
