@@ -34,7 +34,7 @@ while True:
     offset = 0.0
 
     # Configure and activate the watchdog
-    board.set_watchdog_control(128)  # Accepts a multiple of two, up to 128
+    board.set_watchdog_control(256)  # Accepts a multiple of two (except 4), up to 256
     board.activate_watchdog()
     print("Watchdog active")
 

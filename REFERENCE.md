@@ -18,10 +18,21 @@ This is the library reference for the [Pimoroni Inventor HAT Mini](https://pimor
   - [Reading Motor Current](#reading-motor-current)
   - [Skipping Initialisation](#skipping-initialisation)
 - [Servos](#servos)
-  
+  - [Skipping Initialisation](#skipping-initialisation-1)
+  - [As GPIOs](#as-gpios)
+  - [As PWM](#as-pwm)
+    - [Delayed Loading](#delayed-loading)
+    - [Limitations](#limitations)
+  - [As Motor](#as-motor)
+- [RGB LEDs](#rgb-leds)
 - [Audio](#audio)
   - [Muting and Unmuting](#muting-and-unmuting)
-
+- [Watchdog Timer](#watchdog-timer)
+  - [Configuring](#configuring)
+  - [Activating](#activating)
+  - [Feeding](#feeding)
+  - [Deactivating](#deactivating)
+  - [Handling a Time-Out](#handling-a-time-out)
 - [Function Reference](#function-reference)
 - [Constants Reference](#constants-reference)
     - [Motor Constants](#motor-constants)
@@ -171,6 +182,7 @@ These give you access to objects that handle the motor and encoder functionality
 
 The motor outputs of Inventor HAT Mini can be enabled and disabled at any time by calling `.enable_motors()` and `.disable_motors()`. These functions call both motor's respective `.enable()` and `.disable()` functions.
 
+
 ### Reading Motor Current
 
 The current draw of each motor output can be measured by calling `.read_motor_current(motor)`, where motor is either `MOTOR_A` or `MOTOR_B`:
@@ -180,6 +192,7 @@ current = board.read_motor_current(MOTOR_A)
 ```
 
 The returned value is the current in amps (A).
+
 
 ### Skipping Initialisation
 
@@ -193,7 +206,7 @@ board = InventorHATMini(init_motors=False)
 
 This leaves `board.motors` and `board.encoders` set to `None`, letting you to use those board pins for any other purpose.
 
-The pins available after this are:
+The io expander pins available after this are:
 
 * `board.IOE_MOTOR_A_PINS` = `(20, 19)`
 * `board.IOE_MOTOR_B_PINS` = `(16, 15)`
@@ -203,7 +216,7 @@ The pins available after this are:
 
 ## Servos
 
-Inventor HAT Mini four servo outputs. These are setup by default when creating a new `InventorHATMini` object.
+Inventor HAT Mini has four servo outputs. These are setup by default when creating a new `InventorHATMini` object.
 
 To start using a servo, first import one of the handy constants used to reference them (see [Servo Constants](#servo-constants)). For example, to use the first servo:
 
@@ -218,8 +231,9 @@ From there the servo can be accessed by the following `board` variables:
 servo = board.servos[SERVO_1]
 ```
 
-This gives you access to an object that handle the servo functionality. For details of what can be done with them, check out their respective documentation pages:
+This gives you access to an object that handle the servo functionality. For details of what can be done with it, check out its documentation page:
 * `board.servos`: [`Servo` object](https://github.com/pimoroni/ioe-python/blob/master/docs/servo.md)
+
 
 ### Skipping Initialisation
 
@@ -233,15 +247,16 @@ board = InventorHATMini(init_servos=False)
 
 This leaves `board.servos` set to `None`, letting you to use those board pins for any other purpose.
 
-The pins available after this are:
+The io expander pins available after this are:
 
 * `board.IOE_SERVO_PINS` = `(23, 24, 25, 22)`
+
 
 ### As GPIOs
 
 With servos uninitialised, the servo pins can be interacted with like regular GPIO pins (see [GPIOs](#gpios)), using the functions `.servo_pin_mode()` and `.servo_pin_value()`. The one exception to this is that these pins are not ADC capable.
 
-To use a servo pin an input:
+To use a servo pin as an input:
 
 ```python
 # Initialise InventorHATMini without servos
@@ -254,7 +269,7 @@ board.servo_pin_mode(SERVO_1, IN)  # or IN_PU of a pull-up is wanted
 value = board.servo_pin_value(SERVO_1)
 ```
 
-To use a servo pin an output:
+To use a servo pin as an output:
 
 ```python
 # Initialise InventorHATMini without servos
@@ -266,6 +281,7 @@ board.servo_pin_mode(SERVO_1, OUT)
 # Read the servo pin to high
 board.servo_pin_value(i, True)
 ```
+
 
 ### As PWM
 
@@ -294,13 +310,15 @@ board.servo_pin_frequency(SERVO_1, 25000)
 board.servo_pin_value(SERVO_1, 0.5)
 ```
 
-#### Delayed PWM Loading
+
+#### Delayed Loading
 
 By default, changes to a servo pin's frequency or value are applied immediately. However, sometimes this may not be wanted, and instead you want all pins to receive updated parameters at the same time, regardless of how long the code ran that calculated the update.
 
 For this purpose, `.servo_pin_frequency()` and `.servo_pin_value()` include an optional parameter `load`, which by default is `True`. To avoid this "loading" include `load=False` in the relevant function calls. Then either the last call can include `load=True`, or a specific call to `.servo_pin_load()` can be made.
 
 In addition, any function that performs a load, including the `.servo_pin_load()` function, can be made to wait until the new PWM value has been sent out of the pins. By default this is disabled, but can be enabled by including `wait_for_load=True` in the relevant function calls.
+
 
 #### Limitations
 
@@ -327,23 +345,17 @@ motor = board.motor_from_servo_pins(SERVO_1, SERVO_2)
 
 This function returns a new `Motor` object that uses the specified pins. To use this object, refer to the [`Motor` object](https://github.com/pimoroni/ioe-python/blob/master/docs/motor.md) reference.
 
+
 ## RGB LEDs
 
-To make getting started with Inventor HAT Mini easier, the necessary objects for interacting with motors, encoders, servos, and leds are automatically initialised when creating a new `InventorHATMini` object. These can be accessed as variables, like so:
+There are 8 independently addressable RGB LEDs on Inventor HAT Mini, positioned nearby the four servo and four GPIO pins. These LEDs are automatically initialised when creating a new `InventorHATMini` object and can be accessed using the following variable:
 
 ```python
-# Access a motor and its encoder
-motor = board.motors[MOTOR_A]
-encoder = board.encoders[MOTOR_A]
-
-# Access a servo
-servo = board.servos[SERVO_1]
-
-# Access the Neopixel LEDs
+# Access the RGB LEDs
 leds = board.leds
 ```
 
-For details of what can be done with these objects, check out their respective documentation pages:
+For details of what can be done with this object, check out its documentation page:
 * `board.leds`: [`Plasma` object](docs/plasma.md)
 
 
@@ -352,6 +364,7 @@ For details of what can be done with these objects, check out their respective d
 Inventor HAT Mini features an onboard I2S audio amplifier, letting it play any sounds created by your Raspberry Pi, from any source, be it a web browser, music player, or from code. 
 
 There are many ways sound can be created from code, some examples of which can be found in [examples/audio](/examples/audio/).
+
 
 ### Muting and Unmuting
 
@@ -362,17 +375,80 @@ Additionally, when creating a new `InventorHATMini` object, the starting audio o
 
 ## Watchdog Timer
 
-Inventor HAT Mini features an onboard [Watchdog timer](https://en.wikipedia.org/wiki/Watchdog_timer), that can be used to turn off motor and servo outputs in the event of an issue with your code.
+Inventor HAT Mini features an onboard [Watchdog timer](https://en.wikipedia.org/wiki/Watchdog_timer), that can be used to turn off motor and servo outputs in the event of an issue with your code that stops it communicating with the board.
+
+This is especially useful if you are creating a driving robot, to stop it from driving off uncontrolled!
+
+To see an example of the Watchdog timer in action, visit [examples/extras/watchdog_reset.py](examples/extras/watchdog_reset.py).
+
 
 ### Configuring
 
+To start using the watchdog timer, first it's duration needs to be set. This is done using the `.set_watchdog_control()` function, which accepts one of the following multiple of 2 clock divider values:
+
+| Clock Divider   | Time-Out |
+|-----------------|----------|
+| 1               | 6.40ms   |
+| 2               | -        |
+| 4               | 25.6ms   |
+| 8               | 51.2ms   |
+| 16              | 102.4ms  |
+| 32              | 204.8ms  |
+| 64              | 409.6ms  |
+| 128             | 819.2ms  |
+| 256             | 1.638s   |
+
+For example, here is how to set the watchdog to the longest time-out:
+
+```python
+board.set_watchdog_control(256)
+```
+
+
 ### Activating
+
+Once configured, the watchdog can be activated by calling:
+
+```python
+board.activate_watchdog()
+```
+
+There is now limited time (1.638 seconds in this example) to communicate with the Inventor HAT Mini before the watchdog timer reaches zero and resets the board!
+
+The active state of the watchdog timer can be checked by calling `.is_watchdog_active()`.
+
 
 ### Feeding
 
+To prevent the watchdog time from reaching zero, your code needs to "feed" the watchdog regularly. This is done by calling:
+
+```python
+board.feed_watchdog()
+```
+
+This will return the watchdog timer back up to the original value it was at when activated.
+
+
 ### Deactivating
 
-### Checking
+If your code reaches a point where you know it will take longer than the time set, or you otherwise no longer need the watchdog, it can be deactivated by calling:
+
+```python
+board.deactivate_watchdog()
+```
+
+
+### Handling a Time-Out
+
+If the watchdog does reset your Inventor HAT Mini whilst your code is running, it is possible to check for this by calling `.watchdog_timeout_occurred()`, then handle the event. The `InventorHATMini` class has a `.reinit()` function intended for this exact case:
+
+```python
+if board.watchdog_timeout_occurred():
+  board.reinit()
+```
+
+There is also `.clear_watchdog_timeout()` that should be called if you wanted to configure Inventor HAT Mini without calling `.reinit()`.
+
 
 ## Function Reference
 
@@ -408,7 +484,6 @@ clear_watchdog_timeout()
 is_watchdog_active()
 set_watchdog_control(divider)
 ```
-
 
 ## Constants Reference
 
