@@ -18,6 +18,8 @@ pygame.init()
 # Load the sound from file
 ahoy = pygame.mixer.Sound("./ahoy.wav")
 
+print("Press the 'User' button on your Inventor HAT Mini to play the sound.")
+
 # Loop forever
 while True:
     if board.switch_pressed():

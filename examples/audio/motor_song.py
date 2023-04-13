@@ -147,6 +147,7 @@ def sleep_until(end_time):
     if time_to_sleep > 0.0:
         time.sleep(time_to_sleep)
 
+print("Press the 'User' button on your Inventor HAT Mini to start or stop the song.")
 
 while True:
     # Has the button been toggled?
