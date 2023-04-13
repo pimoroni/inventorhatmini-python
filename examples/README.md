@@ -204,13 +204,13 @@ Shows how to configure Inventor HAT Mini's servos with different common calibrat
 ## Audio Examples
 
 ### Play Sound - PyGame
-[audio/play_sound.py](audio/play_sound_pygame.py)
+[audio/play_sound_pygame.py](audio/play_sound_pygame.py)
 
 Play a WAV audio file from your Inventor HAT Mini, using PyGame!
 
 
 ### Play Sound - Aplay
-[audio/play_sound.py](audio/play_sound_aplay.py)
+[audio/play_sound_aplay.py](audio/play_sound_aplay.py)
 
 Play a WAV audio file from your Inventor HAT Mini, using Aplay!
 
