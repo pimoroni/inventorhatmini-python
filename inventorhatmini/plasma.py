@@ -1,4 +1,5 @@
-from rpi_ws281x import Color, PixelStrip
+from rpi_ws281x import PixelStrip
+from colorsys import hsv_to_rgb
 
 from inventorhatmini.errors import LED_INIT_FAILED
 
@@ -41,51 +42,30 @@ class Plasma():
         if index < 0 or index >= self.leds.numPixels():
             raise ValueError("index out of range. Expected 0 to NUM_LEDs - 1")
 
-        self.leds.setPixelColor(index, Color(r, g, b))
+        self.leds.setPixelColorRGB(index, r, g, b)
 
         if show:
             self.leds.show()
 
-    def __hsv_to_rgb(h, s, v):
-        if s == 0.0:
-            return v, v, v
-
-        i = int(h * 6.0)
-        f = (h * 6.0) - i
-        p = v * (1.0 - s)
-        q = v * (1.0 - s * f)
-        t = v * (1.0 - s * (1.0 - f))
-        i = i % 6
-        if i == 0:
-            return v, t, p
-        if i == 1:
-            return q, v, p
-        if i == 2:
-            return p, v, t
-        if i == 3:
-            return p, q, v
-        if i == 4:
-            return t, p, v
-        if i == 5:
-            return v, p, q
-
-    def set_hsv(self, index, hue, sat=1.0, val=1.0, show=True):
+    def set_hsv(self, index, h, s=1.0, v=1.0, show=True):
         if index < 0 or index >= self.leds.numPixels():
             raise ValueError("index out of range. Expected 0 to NUM_LEDs - 1")
 
-        r, g, b = Plasma.__hsv_to_rgb(hue, sat, val)
-        self.leds.setPixelColor(index, Color(int(r * 255), int(g * 255), int(b * 255)))
+        r, g, b = [int(c * 255) for c in hsv_to_rgb(h, s, v)]
+        self.leds.setPixelColorRGB(index, r, g, b)
 
         if show:
             self.leds.show()
 
     def get(self, index):
-        # return a tuple
-        pass
+        if index < 0 or index >= self.leds.numPixels():
+            raise ValueError("index out of range. Expected 0 to NUM_LEDs - 1")
+
+        return self.leds.getPixelColorRGB(index)
 
     def clear(self, show=True):
         for i in range(self.leds.numPixels()):
-            self.leds.setPixelColor(i, Color(0, 0, 0))
+            self.leds.setPixelColorRGB(i, 0, 0, 0)
 
         if show:
             self.leds.show()
@@ -101,7 +81,7 @@ class DummyPlasma():
     def set_rgb(self, index, r, g, b, show=True):
         pass
 
-    def set_hsv(self, index, hue, sat=1.0, val=1.0, show=True):
+    def set_hsv(self, index, h, s=1.0, v=1.0, show=True):
         pass
 
     def get(self, index):
