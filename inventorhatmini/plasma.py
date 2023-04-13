@@ -1,5 +1,6 @@
-from rpi_ws281x import PixelStrip
 from colorsys import hsv_to_rgb
+
+from rpi_ws281x import PixelStrip
 
 from inventorhatmini.errors import LED_INIT_FAILED
 

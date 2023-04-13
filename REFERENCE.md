@@ -45,10 +45,12 @@ This is the library reference for the [Pimoroni Inventor HAT Mini](https://pimor
 ## Getting Started
 
 To start coding your Inventor HAT Mini, you will need to add the following lines to the start of your code file.
+
 ```python
 from inventorhatmini import InventorHATMini
 board = InventorHATMini()
 ```
+
 This will create a `InventorHATMini` class called `board` that will be used in the rest of the examples going forward.
 
 
@@ -60,6 +62,7 @@ Inventor HAT Mini has a single button on top, labelled **User**. This can be rea
 state = board.switch_pressed()
 ```
 
+
 ## Reading Voltage
 
 Inventor HAT Mini can measure the voltage its motors and servos are being powered by. On an unmodified board this is also the voltage of the Raspberry Pi's 5V output.
@@ -70,9 +73,11 @@ The voltage can be measured by calling `.read_voltage()`:
 voltage = board.read_voltage()
 ```
 
+
 ## GPIOs
 
 There are four GPIO pins on Inventor HAT Mini. These can be used as digital outputs, digital inputs, and analog inputs. There is also a special mode where a pair of GPIO pins can be used as rotary encoder inputs.
+
 
 ### Setup
 
@@ -97,6 +102,7 @@ from ioexpander import OUT
 from ioexpander import ADC
 ```
 
+
 ### Mode
 
 With the intended constants imported, the mode of a GPIO pin can be set by calling `.gpio_pin_mode(gpio, mode)`:
@@ -110,6 +116,7 @@ It is also possible to read the current mode of a GPIO pin by calling `.gpio_pin
 ```python
 mode = board.gpio_pin_mode(GPIO_1)
 ```
+
 
 ### As Input or ADC
 
@@ -177,6 +184,7 @@ encoder = board.encoders[MOTOR_A]
 These give you access to objects that handle the motor and encoder functionality. For details of what can be done with them, check out their respective documentation pages:
 * `board.motors`: [`Motor` object](https://github.com/pimoroni/ioe-python/blob/master/docs/motor.md)
 * `board.encoders`:  [`Encoder` object](https://github.com/pimoroni/ioe-python/blob/master/docs/encoder.md)
+
 
 ### Enabling and Disabling
 
@@ -361,7 +369,7 @@ For details of what can be done with this object, check out its documentation pa
 
 ## Audio
 
-Inventor HAT Mini features an onboard I2S audio amplifier, letting it play any sounds created by your Raspberry Pi, from any source, be it a web browser, music player, or from code. 
+Inventor HAT Mini features an onboard I2S audio amplifier, letting it play any sounds created by your Raspberry Pi, from any source, be it a web browser, music player, or from code.
 
 There are many ways sound can be created from code, some examples of which can be found in [examples/audio](/examples/audio/).
 
