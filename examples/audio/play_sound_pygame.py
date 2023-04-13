@@ -2,7 +2,7 @@ import pygame
 from inventorhatmini import InventorHATMini
 
 """
-Play a WAV audio file from your Inventor HAT Mini!
+Play a WAV audio file from your Inventor HAT Mini, using PyGame!
 
 Press "User" to play the sound.
 
