@@ -57,7 +57,7 @@ When you are finished modifying the file, press **CTRL+X** on your keyboard, the
 Reboot after this for the change to take effect.
 
 
-### Enable Audio
+## Enable Audio
 
 To use the audio output of your Inventor HAT Mini you will need to modifying your Pi's configuration file. To do this run `sudo nano /boot/config.txt` to open a terminal text editor.
 
