@@ -44,6 +44,8 @@ def random_string(word_length=5, no_repeat=True):
     return word
 
 
+print("Press the 'User' button on your Inventor HAT Mini to play the sound.")
+
 # Loop forever
 while True:
     if board.switch_pressed():

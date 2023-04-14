@@ -2,7 +2,7 @@ import pygame
 from inventorhatmini import InventorHATMini
 
 """
-Play a WAV audio file from your Inventor HAT Mini!
+Play a WAV audio file from your Inventor HAT Mini, using PyGame!
 
 Press "User" to play the sound.
 
@@ -17,6 +17,8 @@ pygame.init()
 
 # Load the sound from file
 ahoy = pygame.mixer.Sound("./ahoy.wav")
+
+print("Press the 'User' button on your Inventor HAT Mini to play the sound.")
 
 # Loop forever
 while True:

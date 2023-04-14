@@ -30,7 +30,8 @@
   - [Servo Wave](#servo-wave)
   - [Calibration](#calibration)
 - [Audio Examples](#audio-examples)
-  - [Play Sound](#play-sound)
+  - [Play Sound - PyGame](#play-sound---pygame)
+  - [Play Sound - Aplay](#play-sound---aplay)
   - [Motor Song](#motor-song)
   - [Random Droid](#random-droid)
 - [Extra Examples](#extra-examples)
@@ -202,10 +203,16 @@ Shows how to configure Inventor HAT Mini's servos with different common calibrat
 
 ## Audio Examples
 
-### Play Sound
-[audio/play_sound.py](audio/play_sound.py)
+### Play Sound - PyGame
+[audio/play_sound_pygame.py](audio/play_sound_pygame.py)
 
-Play a WAV audio file from your Inventor HAT Mini!
+Play a WAV audio file from your Inventor HAT Mini, using PyGame!
+
+
+### Play Sound - Aplay
+[audio/play_sound_aplay.py](audio/play_sound_aplay.py)
+
+Play a WAV audio file from your Inventor HAT Mini, using Aplay!
 
 
 ### Motor Song

@@ -79,7 +79,7 @@ class InventorHATMini():
     IOE_SERVO_PINS = (23, 24, 25, 22)
 
     # Expander GPIO/ADC pins
-    IOE_GPIO_PINS = (14, 13, 9, 10)
+    IOE_GPIO_PINS = (14, 13, 9, 18)
 
     # Internal sense pins
     IOE_VOLTAGE_SENSE = 11
@@ -115,7 +115,7 @@ class InventorHATMini():
 
     def reinit(self):
         try:
-            self.__ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
+            self.ioe = SuperIOE(i2c_addr=self.address, perform_reset=True)
         except TimeoutError:
             raise TimeoutError(NO_IOE_MSG) from None
         except OSError:
@@ -126,21 +126,20 @@ class InventorHATMini():
         self.motors = None
         self.encoders = None
         if self.__init_motors:
-            self.motors = [Motor(self.__ioe, self.IOE_MOTOR_A_PINS), Motor(self.__ioe, self.IOE_MOTOR_B_PINS)]
-            self.encoders = [Encoder(self.__ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
-                             Encoder(self.__ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=self.__cpr, count_microsteps=True)]
+            self.motors = [Motor(self.ioe, self.IOE_MOTOR_A_PINS), Motor(self.ioe, self.IOE_MOTOR_B_PINS)]
+            self.encoders = [Encoder(self.ioe, 1, self.IOE_ENCODER_A_PINS, counts_per_rev=self.__cpr, count_microsteps=True),
+                             Encoder(self.ioe, 2, self.IOE_ENCODER_B_PINS, counts_per_rev=self.__cpr, count_microsteps=True)]
 
         self.servos = None
         if self.__init_servos:
-            self.servos = [Servo(self.__ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
+            self.servos = [Servo(self.ioe, self.IOE_SERVO_PINS[i]) for i in range(NUM_SERVOS)]
 
-        self.__ioe.set_mode(self.IOE_VOLTAGE_SENSE, ADC)
-        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
-        self.__ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
+        self.ioe.set_mode(self.IOE_VOLTAGE_SENSE, ADC)
+        self.ioe.set_mode(self.IOE_CURRENT_SENSES[0], ADC)
+        self.ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
     def __del__(self):
-        self.__ioe.reset()
-        self.leds.clear()
+        self.ioe.reset()
         GPIO.cleanup()
 
     def switch_pressed(self):
@@ -161,13 +160,13 @@ class InventorHATMini():
                 motor.disable()
 
     def read_voltage(self):
-        return (self.__ioe.input(self.IOE_VOLTAGE_SENSE) * (10 + 3.9)) / 3.9
+        return (self.ioe.input(self.IOE_VOLTAGE_SENSE) * (10 + 3.9)) / 3.9
 
     def read_motor_current(self, motor):
         if motor < 0 or motor >= NUM_MOTORS:
             raise ValueError("motor out of range. Expected MOTOR_A (0) or MOTOR_B (1)")
 
-        return self.__ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
+        return self.ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
 
     def mute_audio(self):
         GPIO.output(self.PI_AMP_EN_PIN, False)
@@ -180,18 +179,18 @@ class InventorHATMini():
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
         if mode is None:
-            return self.__ioe.get_mode(self.IOE_GPIO_PINS[gpio])
+            return self.ioe.get_mode(self.IOE_GPIO_PINS[gpio])
         else:
-            self.__ioe.set_mode(self.IOE_GPIO_PINS[gpio], mode)
+            self.ioe.set_mode(self.IOE_GPIO_PINS[gpio], mode)
 
     def gpio_pin_value(self, gpio, value=None):
         if gpio < 0 or gpio >= NUM_GPIOS:
             raise ValueError("gpio out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
         if value is None:
-            return self.__ioe.input(self.IOE_GPIO_PINS[gpio])
+            return self.ioe.input(self.IOE_GPIO_PINS[gpio])
         else:
-            self.__ioe.output(self.IOE_GPIO_PINS[gpio], value)
+            self.ioe.output(self.IOE_GPIO_PINS[gpio], value)
 
     def servo_pin_mode(self, servo, mode=None):
         if self.servos is not None:
@@ -201,9 +200,9 @@ class InventorHATMini():
             raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
 
         if mode is None:
-            return self.__ioe.get_mode(self.IOE_SERVO_PINS[servo])
+            return self.ioe.get_mode(self.IOE_SERVO_PINS[servo])
         else:
-            self.__ioe.set_mode(self.IOE_SERVO_PINS[servo], mode)
+            self.ioe.set_mode(self.IOE_SERVO_PINS[servo], mode)
 
     def servo_pin_value(self, servo, value=None, load=True, wait_for_load=False):
         if self.servos is not None:
@@ -213,9 +212,9 @@ class InventorHATMini():
             raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
 
         if value is None:
-            return self.__ioe.input(self.IOE_SERVO_PINS[servo])
+            return self.ioe.input(self.IOE_SERVO_PINS[servo])
         else:
-            self.__ioe.output(self.IOE_SERVO_PINS[servo], value, load=load, wait_for_load=wait_for_load)
+            self.ioe.output(self.IOE_SERVO_PINS[servo], value, load=load, wait_for_load=wait_for_load)
 
     def servo_pin_load(self, servo, wait_for_load=True):
         if self.servos is not None:
@@ -224,8 +223,8 @@ class InventorHATMini():
         if servo < 0 or servo >= NUM_SERVOS:
             raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
 
-        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
-        self.__ioe.pwm_load(module, wait_for_load)
+        module = self.ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.ioe.pwm_load(module, wait_for_load)
 
     def servo_pin_frequency(self, servo, frequency, load=True, wait_for_load=True):
         if self.servos is not None:
@@ -234,8 +233,8 @@ class InventorHATMini():
         if servo < 0 or servo >= NUM_SERVOS:
             raise ValueError("servo out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
 
-        module = self.__ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
-        self.__ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
+        module = self.ioe.get_pwm_module(self.IOE_SERVO_PINS[servo])
+        self.ioe.set_pwm_frequency(frequency, module, load=load, wait_for_load=wait_for_load)
 
     def encoder_from_gpio_pins(self, channel, gpio_a, gpio_b, direction=NORMAL_DIR, counts_per_rev=ROTARY_CPR, count_microsteps=False):
         if self.encoders is not None:
@@ -253,7 +252,7 @@ class InventorHATMini():
         if gpio_b < 0 or gpio_b >= NUM_GPIOS:
             raise ValueError("gpio_b out of range. Expected GPIO_1 (0), GPIO_2 (1), GPIO_3 (2) or GPIO_4 (3)")
 
-        return Encoder(self.__ioe, channel, (self.IOE_GPIO_PINS[gpio_a], self.IOE_GPIO_PINS[gpio_b]), direction=direction, counts_per_rev=counts_per_rev, count_microsteps=count_microsteps)
+        return Encoder(self.ioe, channel, (self.IOE_GPIO_PINS[gpio_a], self.IOE_GPIO_PINS[gpio_b]), direction=direction, counts_per_rev=counts_per_rev, count_microsteps=count_microsteps)
 
     def motor_from_servo_pins(self, servo_p, servo_n, direction=NORMAL_DIR, speed_scale=MotorState.DEFAULT_SPEED_SCALE, zeropoint=MotorState.DEFAULT_ZEROPOINT,
                               deadzone=MotorState.DEFAULT_DEADZONE, freq=MotorState.DEFAULT_FREQUENCY, mode=MotorState.DEFAULT_DECAY_MODE):
@@ -266,29 +265,29 @@ class InventorHATMini():
         if servo_n < 0 or servo_n >= NUM_SERVOS:
             raise ValueError("servo_n out of range. Expected SERVO_1 (0), SERVO_2 (1), SERVO_3 (2) or SERVO_4 (3)")
 
-        return Motor(self.__ioe, (self.IOE_SERVO_PINS[servo_p], self.IOE_SERVO_PINS[servo_n]), direction=direction,
+        return Motor(self.ioe, (self.IOE_SERVO_PINS[servo_p], self.IOE_SERVO_PINS[servo_n]), direction=direction,
                      speed_scale=speed_scale, zeropoint=zeropoint, deadzone=deadzone, freq=freq, mode=mode)
 
     def activate_watchdog(self):
-        self.__ioe.activate_watchdog()
+        self.ioe.activate_watchdog()
 
     def deactivate_watchdog(self):
-        self.__ioe.deactivate_watchdog()
+        self.ioe.deactivate_watchdog()
 
     def feed_watchdog(self):
-        self.__ioe.reset_watchdog_counter()
+        self.ioe.reset_watchdog_counter()
 
     def watchdog_timeout_occurred(self):
-        return self.__ioe.watchdog_timeout_occurred()
+        return self.ioe.watchdog_timeout_occurred()
 
     def clear_watchdog_timeout(self):
-        self.__ioe.clear_watchdog_timeout()
+        self.ioe.clear_watchdog_timeout()
 
     def is_watchdog_active(self):
-        return self.__ioe.is_watchdog_active()
+        return self.ioe.is_watchdog_active()
 
     def set_watchdog_control(self, divider):
-        self.__ioe.set_watchdog_control(divider)
+        self.ioe.set_watchdog_control(divider)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ PYTHON="/usr/bin/python3"
 
 user_check() {
 	if [ $(id -u) -eq 0 ]; then
-		printf "Script should not be run as root. Try './install.sh'\n"
+		printf "Script should not be run as root. Try './uninstall.sh'\n"
 		exit 1
 	fi
 }
@@ -51,7 +51,8 @@ printf "$LIBRARY_NAME Python Library: Uninstaller\n\n"
 user_check
 
 printf "Uninstalling for Python 3...\n"
-$PYTHON -m pip uninstall $LIBRARY_NAME
+# Sadly have to run this as sudo to uninstall the packages that were installed as sudo with the install script
+sudo $PYTHON -m pip uninstall $LIBRARY_NAME
 
 if [ -d $RESOURCES_DIR ]; then
 	if confirm "Would you like to delete $RESOURCES_DIR?"; then
