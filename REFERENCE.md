@@ -212,7 +212,7 @@ To allow for this, the parameter `init_motors=False` can be added when creating 
 board = InventorHATMini(init_motors=False)
 ```
 
-This leaves `board.motors` and `board.encoders` set to `None`, letting you to use those board pins for any other purpose.
+This leaves `board.motors` and `board.encoders` set to `None`, letting you to use those board pins for any other purpose by accessing functions on the io expander directly with `board.ioe`.
 
 The io expander pins available after this are:
 
@@ -220,6 +220,14 @@ The io expander pins available after this are:
 * `board.IOE_MOTOR_B_PINS` = `(16, 15)`
 * `board.IOE_ENCODER_A_PINS` = `(3, 4)`
 * `board.IOE_ENCODER_B_PINS` = `(26, 1)`
+
+For example, heres how to have one of the encoder pins as an output and set it high:
+```python
+board.ioe.set_mode(board.IOE_ENCODER_A_PINS[0], OUT)
+board.ioe.output(board.IOE_ENCODER_A_PINS[0], True)
+```
+
+For more details of what can be done directly with the io expander, visit its [library reference](https://github.com/pimoroni/ioe-python/blob/master/REFERENCE.md).
 
 
 ## Servos
@@ -253,7 +261,7 @@ To allow for this, the parameter `init_servos=False` can be added when creating 
 board = InventorHATMini(init_servos=False)
 ```
 
-This leaves `board.servos` set to `None`, letting you to use those board pins for any other purpose.
+This leaves `board.servos` set to `None`, letting you to use those board pins for any other purpose using the functions described in the next sections or by accessing functions on the io expander directly with `board.ioe`.
 
 The io expander pins available after this are:
 
