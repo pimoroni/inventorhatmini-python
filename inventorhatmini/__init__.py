@@ -87,7 +87,7 @@ class InventorHATMini():
 
     SHUNT_RESISTOR = 0.47
 
-    def __init__(self, address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
+    def __init__(self, address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False, encoder_cpr=MMME_CPR):
         """ Initialise inventor hat mini's hardware functions
         """
         self.address = address
@@ -101,7 +101,7 @@ class InventorHATMini():
         # Setup amplifier enable. This mutes the audio by default
         GPIO.setup(self.PI_AMP_EN_PIN, GPIO.OUT, initial=GPIO.LOW if start_muted else GPIO.HIGH)
 
-        self.__cpr = MMME_CPR * motor_gear_ratio
+        self.__cpr = encoder_cpr * motor_gear_ratio
         self.__init_motors = init_motors
         self.__init_servos = init_servos
         self.reinit()
