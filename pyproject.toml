@@ -36,7 +36,8 @@ classifiers = [
     "Topic :: System :: Hardware",
 ]
 dependencies = [
-    "pimoroni-ioexpander",
+    "pimoroni-ioexpander>=1.0.1",
+    "smbus2",
     "rpi_ws281x"
 ]
 
@@ -115,7 +116,7 @@ ignore = [
     '.coveragerc'
 ]
 
-[pimoroni]
-apt_packages = ["python3-rpi.gpio", "python3-smbus"]
+[tool.pimoroni]
+apt_packages = []
 configtxt = []
 commands = []
