@@ -61,7 +61,7 @@ Reboot after this for the change to take effect.
 
 To use the audio output of your Inventor HAT Mini you will need to modifying your Pi's configuration file. To do this run `sudo nano /boot/config.txt` to open a terminal text editor.
 
-Within the editor navigate to the bottom of the file and include the lines `dtoverlay=hifiberry-dac` and `gpio=25=op,dh`. The first line switches the audio to use the GPIO header of your Pi for audio output, and the second line will cause your Pi to enable the audio output on bootup, by setting pin BCM 25 to high. Then navigate up to the line `dtparam=i2s=on`. If this says `off` or is commented out with a `#`, uncomment it and change it to `on`.
+Within the editor navigate to the bottom of the file and include the lines `dtoverlay=hifiberry-dac` and `gpio=25=op,dh`. The first line switches the audio to use the GPIO header of your Pi for audio output, and the second line will cause your Pi to enable the audio output on boot, by setting pin BCM 25 to high. Then navigate up to the line `dtparam=i2s=on`. If this says `off` or is commented out with a `#`, uncomment it and change it to `on`.
 
 Depending on your setup, you may also need to disable other audio outputs of your Pi (for example audio over HDMI). Look through the file for any existing mention to `dtparam=audio=on` and change it to `dtparam=audio=off`. There may the line `dtoverlay=vc4-kms-v3d`. Modify this to be `dtoverlay=vc4-kms-v3d,noaudio`.
 
