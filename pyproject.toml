@@ -115,7 +115,7 @@ ignore = [
     '.coveragerc'
 ]
 
-[pimoroni]
+[tool.pimoroni]
 apt_packages = ["python3-rpi.gpio", "python3-smbus"]
 configtxt = []
 commands = []
