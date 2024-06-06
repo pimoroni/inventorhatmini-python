@@ -37,11 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "pimoroni-ioexpander>=1.0.0",
-    "smbus2"
-]
-
-[project.optional-dependencies]
-leds = [
+    "smbus2",
     "rpi_ws281x"
 ]
 

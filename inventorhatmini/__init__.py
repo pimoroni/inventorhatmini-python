@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import time
+import warnings
 
 import gpiod
 import gpiodevice
 from gpiod.line import Bias, Direction, Value
+from gpiodevice import platform
 from ioexpander import ADC, SuperIOE
 from ioexpander.common import NORMAL_DIR
 from ioexpander.encoder import MMME_CPR, ROTARY_CPR, Encoder
@@ -111,12 +113,17 @@ class InventorHATMini():
         self.__init_servos = init_servos
         self.reinit()
 
-        if init_leds:
+        is_pi5 = platform.get_name().startswith("Raspberry Pi 5")
+
+        if init_leds and not is_pi5:
             # Setup the PixelStrip object to use with Inventor's LEDs, wrapped in a Plasma class
             self.leds = Plasma(NUM_LEDS, self.PI_LED_DATA_PIN)
         else:
             # Setup a dummy Plasma class, so examples don't need to check LED presence
             self.leds = DummyPlasma()
+
+        if is_pi5:
+            warnings.warn("LEDs are not yet supported on Pi 5.")
 
     def _write_pin(self, pin, state):
         lines, offset = pin
