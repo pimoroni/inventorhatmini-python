@@ -117,7 +117,7 @@ class InventorHATMini():
         else:
             # Setup a dummy Plasma class, so examples don't need to check LED presence
             self.leds = DummyPlasma()
-            
+
     def _write_pin(self, pin, state):
         lines, offset = pin
         lines.set_value(offset, Value.ACTIVE if state else Value.INACTIVE)
