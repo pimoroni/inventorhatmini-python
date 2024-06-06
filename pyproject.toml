@@ -36,7 +36,7 @@ classifiers = [
     "Topic :: System :: Hardware",
 ]
 dependencies = [
-    "pimoroni-ioexpander>=1.0.0",
+    "pimoroni-ioexpander>=1.0.1",
     "smbus2",
     "rpi_ws281x"
 ]
