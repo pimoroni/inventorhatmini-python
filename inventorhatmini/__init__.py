@@ -16,7 +16,7 @@ from ioexpander.servo import Servo
 from inventorhatmini.errors import NO_I2C, NO_IOE_MSG
 from inventorhatmini.plasma import DummyPlasma, Plasma
 
-__version__ = '0.0.1'
+__version__ = '1.0.0'
 
 
 # Index Constants
