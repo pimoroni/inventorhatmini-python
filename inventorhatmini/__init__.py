@@ -2,7 +2,9 @@
 
 import time
 
-import RPi.GPIO as GPIO
+import gpiod
+import gpiodevice
+from gpiod.line import Bias, Direction, Value
 from ioexpander import ADC, SuperIOE
 from ioexpander.common import NORMAL_DIR
 from ioexpander.encoder import MMME_CPR, ROTARY_CPR, Encoder
@@ -44,6 +46,10 @@ NUM_MOTORS = 2
 NUM_SERVOS = 4
 NUM_GPIOS = 4
 NUM_LEDS = 8
+
+INPD = gpiod.LineSettings(direction=Direction.INPUT, bias=Bias.PULL_DOWN)
+OUTL = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIVE)
+OUTH = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.ACTIVE)
 
 
 class InventorHATMini():
@@ -92,14 +98,13 @@ class InventorHATMini():
         """
         self.address = address
 
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
+        gpiodevice.friendly_errors = True
 
         # Setup user button
-        GPIO.setup(self.PI_USER_SW_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        self._pin_user_sw = gpiodevice.get_pin(self.PI_USER_SW_PIN, "IHM-SW", INPD)
 
         # Setup amplifier enable. This mutes the audio by default
-        GPIO.setup(self.PI_AMP_EN_PIN, GPIO.OUT, initial=GPIO.LOW if start_muted else GPIO.HIGH)
+        self._pin_amp_en = gpiodevice.get_pin(self.PI_AMP_EN_PIN, "IHM-AMP-En", OUTL if start_muted else OUTH)
 
         self.__cpr = MMME_CPR * motor_gear_ratio
         self.__init_motors = init_motors
@@ -112,6 +117,14 @@ class InventorHATMini():
         else:
             # Setup a dummy Plasma class, so examples don't need to check LED presence
             self.leds = DummyPlasma()
+            
+    def _write_pin(self, pin, state):
+        lines, offset = pin
+        lines.set_value(offset, Value.ACTIVE if state else Value.INACTIVE)
+
+    def _read_pin(self, pin):
+        lines, offset = pin
+        return lines.get_value(offset) == Value.ACTIVE
 
     def reinit(self):
         try:
@@ -140,10 +153,9 @@ class InventorHATMini():
 
     def __del__(self):
         self.ioe.reset()
-        GPIO.cleanup()
 
     def switch_pressed(self):
-        return GPIO.input(self.PI_USER_SW_PIN) != 0
+        return self._read_pin(self._pin_user_sw)
 
     def enable_motors(self):
         """ Enables both motors.
@@ -169,10 +181,10 @@ class InventorHATMini():
         return self.ioe.input(self.IOE_CURRENT_SENSES[motor]) / self.SHUNT_RESISTOR
 
     def mute_audio(self):
-        GPIO.output(self.PI_AMP_EN_PIN, False)
+        self._write_pin(self._pin_amp_en, False)
 
     def unmute_audio(self):
-        GPIO.output(self.PI_AMP_EN_PIN, True)
+        self._write_pin(self._pin_amp_en, True)
 
     def gpio_pin_mode(self, gpio, mode=None):
         if gpio < 0 or gpio >= NUM_GPIOS:

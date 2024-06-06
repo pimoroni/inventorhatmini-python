@@ -1,7 +1,5 @@
 from colorsys import hsv_to_rgb
 
-from rpi_ws281x import PixelStrip
-
 from inventorhatmini.errors import LED_INIT_FAILED
 
 
@@ -30,6 +28,12 @@ class Plasma():
         222, 224, 227, 229, 231, 233, 235, 237, 239, 241, 244, 246, 248, 250, 252, 255]
 
     def __init__(self, num_leds, pin):
+        try:
+            from rpi_ws281x import PixelStrip
+        except ImportError:
+            self = DummyPlasma()
+            return
+
         # Setup the PixelStrip object to use with Inventor's LEDs
         self.leds = PixelStrip(num_leds, pin, self.LED_FREQ_HZ, self.LED_DMA, self.LED_INVERT, self.LED_BRIGHTNESS, self.LED_CHANNEL, self.LED_GAMMA)
         try:
