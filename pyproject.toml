@@ -37,6 +37,7 @@ classifiers = [
 ]
 dependencies = [
     "pimoroni-ioexpander>=1.0.1",
+    "gpiodevice",
     "smbus2",
     "rpi_ws281x"
 ]
