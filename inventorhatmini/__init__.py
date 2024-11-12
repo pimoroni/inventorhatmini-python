@@ -98,15 +98,18 @@ class InventorHATMini():
     def __init__(self, address=IOE_ADDRESS, motor_gear_ratio=50, init_motors=True, init_servos=True, init_leds=True, start_muted=False):
         """ Initialise inventor hat mini's hardware functions
         """
-        self.address = address
+        self.ioe = None
 
         gpiodevice.friendly_errors = True
 
-        # Setup user button
-        self._pin_user_sw = gpiodevice.get_pin(self.PI_USER_SW_PIN, "IHM-SW", INPD)
+        self.address = address
 
-        # Setup amplifier enable. This mutes the audio by default
-        self._pin_amp_en = gpiodevice.get_pin(self.PI_AMP_EN_PIN, "IHM-AMP-En", OUTL if start_muted else OUTH)
+        if ( address == self.IOE_ADDRESS ): # only if using default address, for use with multiple HATs
+            # Setup user button
+            self._pin_user_sw = gpiodevice.get_pin(self.PI_USER_SW_PIN, "IHM-SW", INPD)
+
+            # Setup amplifier enable. This mutes the audio by default
+            self._pin_amp_en = gpiodevice.get_pin(self.PI_AMP_EN_PIN, "IHM-AMP-En", OUTL if start_muted else OUTH)
 
         self.__cpr = MMME_CPR * motor_gear_ratio
         self.__init_motors = init_motors
@@ -159,7 +162,8 @@ class InventorHATMini():
         self.ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
     def __del__(self):
-        self.ioe.reset()
+        if self.ioe:
+            self.ioe.reset()
 
     def switch_pressed(self):
         return self._read_pin(self._pin_user_sw)
