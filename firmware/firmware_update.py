@@ -123,7 +123,7 @@ def firmware_update(bin_data, i2c_address, chip_id):
 
     try:
         i2c_read8(bootloader_i2c_addr, 0x00)
-    except:
+    except Exception:
         # We're not in bootloader yet, let's enter first
         confirm_id(i2c_address, chip_id)
         enter_bootloader(i2c_address)
