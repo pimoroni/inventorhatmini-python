@@ -42,13 +42,13 @@
 # 60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
 # 70: -- -- -- -- -- -- -- --  
 
-import time
 import os
 import sys
-
-from smbus2 import SMBus, i2c_msg
+import time
 
 import RPi.GPIO as GPIO
+from smbus2 import SMBus, i2c_msg
+
 GPIO.setmode(GPIO.BCM)
 
 CHIP_ID          = 0xBA11
