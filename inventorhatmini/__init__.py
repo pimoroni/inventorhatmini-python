@@ -99,6 +99,7 @@ class InventorHATMini():
         """ Initialise inventor hat mini's hardware functions
         """
         self.address = address
+        self.ioe = None
 
         gpiodevice.friendly_errors = True
 
@@ -159,7 +160,8 @@ class InventorHATMini():
         self.ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
     def __del__(self):
-        self.ioe.reset()
+        if self.ioe is not None:
+            self.ioe.reset()
 
     def switch_pressed(self):
         return self._read_pin(self._pin_user_sw)
