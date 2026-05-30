@@ -26,14 +26,10 @@ docker build -f Dockerfile.testing \
 All commands below mount the repository into the container so changes are picked up without
 a rebuild. Run them from the repository root.
 
-The `git config` prefix used in some commands below is required because Git's ownership
-safety check fires on volume-mounted directories.
-
 **Integrity checks** (trailing whitespace, DOS line-endings, CHANGELOG entry, git tag):
 
 ```bash
-docker run --rm -v "$(pwd)":/app inventorhatmini-dev:python3.11-v1.0.1 \
-  bash -c 'git config --global --add safe.directory /app && make check'
+docker run --rm -v "$(pwd)":/app inventorhatmini-dev:python3.11-v1.0.1 make check
 ```
 
 **Shell script linting:**
@@ -45,8 +41,7 @@ docker run --rm -v "$(pwd)":/app inventorhatmini-dev:python3.11-v1.0.1 make shel
 **QA** (ruff, isort, codespell, check-manifest, build, twine check):
 
 ```bash
-docker run --rm -v "$(pwd)":/app inventorhatmini-dev:python3.11-v1.0.1 \
-  bash -c 'git config --global --add safe.directory /app && make qa'
+docker run --rm -v "$(pwd)":/app inventorhatmini-dev:python3.11-v1.0.1 make qa
 ```
 
 ### Dependency lock file

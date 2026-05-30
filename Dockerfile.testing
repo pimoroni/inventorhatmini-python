@@ -46,3 +46,7 @@ RUN uv pip install --system --no-cache -r requirements-dev.lock
 COPY . .
 
 USER appuser
+
+# Allow git to read the volume-mounted repo (ownership matches host UID but
+# git's safe.directory check still fires on mounted directories).
+RUN git config --global --add safe.directory /app
