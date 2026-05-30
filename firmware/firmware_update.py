@@ -5,13 +5,10 @@
 # Usage: python firmware_update.py filename.hex
 
 import binascii
-
 import sys
 import time
 
-
 from smbus2 import SMBus, i2c_msg
-
 
 # Small nuvoton:
 bootloader_id       = 0xB001
