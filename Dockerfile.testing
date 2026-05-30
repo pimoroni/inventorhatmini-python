@@ -27,6 +27,13 @@ RUN apt-get update \
         git \
     && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user matching typical host UID/GID (1000:1000).
+# Override at runtime with: --user $(id -u):$(id -g)
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g "${GID}" appuser \
+    && useradd -l -u "${UID}" -g "${GID}" -m appuser
+
 WORKDIR /app
 
 # Copy dependency lock file first for layer caching
@@ -37,3 +44,5 @@ RUN uv pip install --system --no-cache -r requirements-dev.lock
 
 # Copy project source
 COPY . .
+
+USER appuser
