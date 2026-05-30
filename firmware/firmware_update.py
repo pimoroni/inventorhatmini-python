@@ -5,13 +5,10 @@
 # Usage: python firmware_update.py filename.hex
 
 import binascii
-
 import sys
 import time
 
-
 from smbus2 import SMBus, i2c_msg
-
 
 # Small nuvoton:
 bootloader_id       = 0xB001
@@ -108,7 +105,7 @@ def write_page_to_aprom():
         try:
             i2c_read8(bootloader_i2c_addr, 0x00)
             break
-        except:
+        except Exception:
             print("waiting for page write to finish...")
 
 def read_page_from_aprom():
@@ -126,7 +123,7 @@ def firmware_update(bin_data, i2c_address, chip_id):
 
     try:
         i2c_read8(bootloader_i2c_addr, 0x00)
-    except:
+    except Exception:
         # We're not in bootloader yet, let's enter first
         confirm_id(i2c_address, chip_id)
         enter_bootloader(i2c_address)
@@ -187,7 +184,7 @@ def firmware_update(bin_data, i2c_address, chip_id):
 
 
 if __name__ == "__main__":
-    filename = sys.argv[1];
+    filename = sys.argv[1]
     # if bin_filename.endswith(".bin"):
     #     bin_data = open(bin_filename, "rb").read()
     #     bin_data = [ord(x) for x in bin_data]

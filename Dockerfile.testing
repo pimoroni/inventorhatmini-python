@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1
+#
+# Tagging convention: inventorhatmini-dev:python<python-ver>-v<testing-ver>
+#   python-ver  — Python minor version in the base image (e.g. 3.11)
+#   testing-ver — SemVer, always at least one patch ahead of the released
+#                 inventorhatmini library version (e.g. library 1.0.0 → testing v1.0.1)
+#
+# Build example:
+#   docker build -f Dockerfile.testing -t inventorhatmini-dev:python3.11-v1.0.1 .
+#
+# Stage 1: UV binary source
+FROM ghcr.io/astral-sh/uv:0.7.13 AS uv-base
+
+# Stage 2: Testing environment
+FROM python:3.11-slim-bookworm AS testing
+
+# Copy UV binary from uv-base stage
+COPY --from=uv-base /uv /uvx /usr/local/bin/
+
+# Install system dependencies
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        make \
+        dos2unix \
+        shellcheck \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user matching typical host UID/GID (1000:1000).
+# Override at runtime with: --user $(id -u):$(id -g)
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g "${GID}" appuser \
+    && useradd -l -u "${UID}" -g "${GID}" -m appuser
+
+WORKDIR /app
+
+# Copy dependency lock file first for layer caching
+COPY requirements-dev.lock ./
+
+# Install dev dependencies from pinned lock file
+RUN uv pip install --system --no-cache -r requirements-dev.lock
+
+# Copy project source
+COPY . .
+
+USER appuser
+
+# Allow git to read the volume-mounted repo (ownership matches host UID but
+# git's safe.directory check still fires on mounted directories).
+RUN git config --global --add safe.directory /app
