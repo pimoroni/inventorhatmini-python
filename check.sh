@@ -7,6 +7,7 @@ LIBRARY_NAME=$(hatch project metadata name)
 LIBRARY_VERSION=$(hatch version | awk -F "." '{print $1"."$2"."$3}')
 POST_VERSION=$(hatch version | awk -F "." '{print substr($4,0,length($4))}')
 TERM=${TERM:="xterm-256color"}
+export TERM
 
 success() {
 	echo -e "$(tput setaf 2)$1$(tput sgr0)"
