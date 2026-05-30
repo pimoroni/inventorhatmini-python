@@ -1,4 +1,13 @@
 # syntax=docker/dockerfile:1
+#
+# Tagging convention: inventorhatmini-dev:python<python-ver>-v<testing-ver>
+#   python-ver  — Python minor version in the base image (e.g. 3.11)
+#   testing-ver — SemVer, always at least one patch ahead of the released
+#                 inventorhatmini library version (e.g. library 1.0.0 → testing v1.0.1)
+#
+# Build example:
+#   docker build -f Dockerfile.testing -t inventorhatmini-dev:python3.11-v1.0.1 .
+#
 # Stage 1: UV binary source
 FROM ghcr.io/astral-sh/uv:0.7.13 AS uv-base
 
@@ -13,6 +22,8 @@ COPY --from=uv-base /uv /uvx /usr/local/bin/
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         make \
+        dos2unix \
+        shellcheck \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
