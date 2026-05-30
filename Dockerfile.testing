@@ -24,6 +24,7 @@ RUN apt-get update \
         make \
         dos2unix \
         shellcheck \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
