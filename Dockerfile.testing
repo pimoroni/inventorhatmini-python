@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+# Stage 1: UV binary source
+FROM ghcr.io/astral-sh/uv:0.7.13 AS uv-base
+
+# Stage 2: Testing environment
+FROM python:3.11-slim-bookworm AS testing
+
+# Copy UV binary from uv-base stage
+COPY --from=uv-base /uv /uvx /usr/local/bin/
+
+# Install system dependencies
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        make \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy dependency lock file first for layer caching
+COPY requirements-dev.lock ./
+
+# Install dev dependencies from pinned lock file
+RUN uv pip install --system --no-cache -r requirements-dev.lock
+
+# Copy project source
+COPY . .
