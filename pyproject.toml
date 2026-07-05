@@ -1,13 +1,13 @@
 [build-system]
-requires = ["hatchling", "hatch-fancy-pypi-readme"]
+requires = ["hatchling", "hatch-fancy-pypi-readme", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [project]
 name = "inventorhatmini"
-dynamic = ["version", "readme"]
+dynamic = ["version", "readme", "optional-dependencies"]
 description = "Library for the Pimoroni Inventor HAT Mini"
 license = {file = "LICENSE"}
-requires-python = ">= 3.7"
+requires-python = ">= 3.9"
 authors = [
     { name = "Christopher Parrott", email = "chris@pimoroni.com" },
 ]
@@ -25,11 +25,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Software Development :: Libraries",
@@ -42,9 +42,26 @@ dependencies = [
     "rpi_ws281x"
 ]
 
+[tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
+example-depends = ["requirements-examples.txt"]
+
 [project.urls]
 GitHub = "https://www.github.com/pimoroni/inventorhatmini-python"
 Homepage = "https://www.pimoroni.com"
+
+[dependency-groups]
+dev = [
+    "check-manifest",
+    "ruff",
+    "codespell",
+    "pre-commit",
+    "twine",
+    "hatch",
+    "hatch-fancy-pypi-readme",
+    "hatch-requirements-txt",
+    "tox",
+    "pdoc",
+]
 
 [tool.hatch.version]
 path = "inventorhatmini/__init__.py"
@@ -53,9 +70,6 @@ path = "inventorhatmini/__init__.py"
 include = [
     "/inventorhatmini",
     "/examples",
-    "/README.md",
-    "/CHANGELOG.md",
-    "LICENSE"
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -86,6 +100,9 @@ exclude = [
 ]
 line-length = 250
 
+[tool.ruff.lint]
+extend-select = ["I"]
+
 [tool.codespell]
 skip = """
 ./.tox,\
@@ -96,25 +113,18 @@ skip = """
 ./dist.\
 """
 
-[tool.isort]
-line_length = 250
-skip = [
-    'examples',
-    '.tox'
-]
-
 [tool.check-manifest]
 ignore = [
-    '.stickler.yml',
     'boilerplate.md',
-    'check.sh',
     'install.sh',
     'uninstall.sh',
     'Makefile',
     'tox.ini',
     'tests/*',
     'examples/*',
-    '.coveragerc'
+    '.coveragerc',
+    '.editorconfig',
+    '.pre-commit-config.yaml',
 ]
 
 [tool.pimoroni]
