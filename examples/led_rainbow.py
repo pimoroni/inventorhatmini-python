@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_LEDS
+
+from inventorhatmini import NUM_LEDS, InventorHATMini
 
 """
 Displays a rotating rainbow pattern on Inventor HAT Mini's onboard LED bars.

@@ -1,7 +1,9 @@
-import time
 import random
-from inventorhatmini import InventorHATMini
+import time
+
 from ttastromech import TTAstromech
+
+from inventorhatmini import InventorHATMini
 
 """
 Make your Inventor HAT Mini sound like an Astromech Droid!

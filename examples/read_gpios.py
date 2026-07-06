@@ -1,6 +1,8 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_GPIOS, LED_GPIO_1
+
 from ioexpander import IN  # or IN_PU of a pull-up is wanted
+
+from inventorhatmini import LED_GPIO_1, NUM_GPIOS, InventorHATMini
 
 """
 Shows how to initialise the 4 GPIO headers of Inventor HAT Mini as inputs and read them.

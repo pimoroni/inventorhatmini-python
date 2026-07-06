@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, SERVO_1
+import time
+
+from inventorhatmini import SERVO_1, InventorHATMini
 
 """
 Demonstrates how to control a single servo on Inventor HAT Mini.

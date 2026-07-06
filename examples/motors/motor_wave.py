@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, NUM_LEDS, NUM_MOTORS
+import time
+
+from inventorhatmini import NUM_LEDS, NUM_MOTORS, InventorHATMini
 
 """
 An example of applying a wave pattern to Inventor HAT Mini's motors and LEDs.

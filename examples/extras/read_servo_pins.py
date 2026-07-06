@@ -1,6 +1,8 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_SERVOS, LED_SERVO_1
+
 from ioexpander import IN  # or IN_PU of a pull-up is wanted
+
+from inventorhatmini import LED_SERVO_1, NUM_SERVOS, InventorHATMini
 
 """
 Shows how to initialise and use Inventor HAT Mini's servo headers as 3.3V inputs and read them.

@@ -1,6 +1,8 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, MOTOR_B, NUM_MOTORS, NUM_LEDS
+
 from ioexpander.common import PID, REVERSED_DIR
+
+from inventorhatmini import MOTOR_A, MOTOR_B, NUM_LEDS, NUM_MOTORS, InventorHATMini
 
 """
 A demonstration of driving both of Inventor HAT Mini's motor outputs through a

@@ -1,5 +1,6 @@
-import time
 import math
+import time
+
 from inventorhatmini import InventorHATMini
 
 """

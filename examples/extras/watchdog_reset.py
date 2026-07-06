@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, NUM_MOTORS
+import time
+
+from inventorhatmini import NUM_MOTORS, InventorHATMini
 
 """
 A demonstration of using Inventor HAT Mini's internal watchdog to stop motors

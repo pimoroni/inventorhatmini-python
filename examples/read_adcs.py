@@ -1,6 +1,8 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_GPIOS, LED_GPIO_1
+
 from ioexpander import ADC
+
+from inventorhatmini import LED_GPIO_1, NUM_GPIOS, InventorHATMini
 
 """
 Shows how to initialise and read the 4 ADC headers of Inventor HAT Mini.

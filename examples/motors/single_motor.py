@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, MOTOR_A
+import time
+
+from inventorhatmini import MOTOR_A, InventorHATMini
 
 """
 Demonstrates how to control a motor on Inventor HAT Mini.

@@ -1,6 +1,8 @@
 import time
-from inventorhatmini import InventorHATMini, MOTOR_A, MOTOR_B
+
 from ioexpander.motor import SLOW_DECAY  # , FAST_DECAY
+
+from inventorhatmini import MOTOR_A, MOTOR_B, InventorHATMini
 
 """
 A fun example of how to change a motor's frequency to have it play a song.

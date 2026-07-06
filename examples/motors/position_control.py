@@ -1,8 +1,10 @@
-import time
 import math
 import random
-from inventorhatmini import InventorHATMini, MOTOR_A
-from ioexpander.common import PID, NORMAL_DIR  # , REVERSED_DIR
+import time
+
+from ioexpander.common import NORMAL_DIR, PID  # , REVERSED_DIR
+
+from inventorhatmini import MOTOR_A, InventorHATMini
 
 """
 An example of how to move a motor smoothly between random positions,

@@ -1,6 +1,8 @@
 import time
+
 import RPi.GPIO as GPIO
-from inventorhatmini import InventorHATMini, NUM_LEDS
+
+from inventorhatmini import NUM_LEDS, InventorHATMini
 
 """
 Control a HC-SR04 style ultrasonic distance sensor using the UART header on InventorHATMini.
