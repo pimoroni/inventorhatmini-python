@@ -2,6 +2,7 @@
 
 import time
 import warnings
+from importlib.metadata import PackageNotFoundError, version
 
 import gpiod
 import gpiodevice
@@ -16,7 +17,10 @@ from ioexpander.servo import Servo
 from inventorhatmini.errors import NO_I2C, NO_IOE_MSG
 from inventorhatmini.plasma import DummyPlasma, Plasma
 
-__version__ = '1.0.0'
+try:
+    __version__ = version("inventorhatmini")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 
 # Index Constants
