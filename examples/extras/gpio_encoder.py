@@ -1,5 +1,7 @@
 import time
-from inventorhatmini import InventorHATMini, GPIO_1, GPIO_2
+
+from inventorhatmini import GPIO_1, GPIO_2, InventorHATMini
+
 # from ioexpander.common import REVERSED_DIR
 
 """

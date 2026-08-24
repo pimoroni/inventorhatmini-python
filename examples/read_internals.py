@@ -1,5 +1,6 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_MOTORS
+
+from inventorhatmini import NUM_MOTORS, InventorHATMini
 
 """
 Shows how to read the internal sensors of Inventor HAT Mini.

@@ -1,5 +1,7 @@
 import time
-from inventorhatmini import InventorHATMini, NUM_MOTORS  # , MOTOR_A, MOTOR_B
+
+from inventorhatmini import NUM_MOTORS, InventorHATMini  # , MOTOR_A, MOTOR_B
+
 # from ioexpander.common import REVERSED_DIR
 
 """

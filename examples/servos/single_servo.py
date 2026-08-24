@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, SERVO_1
+import time
+
+from inventorhatmini import SERVO_1, InventorHATMini
 
 """
 Demonstrates how to control a single servo on Inventor HAT Mini.
@@ -33,17 +34,17 @@ STEPS_INTERVAL = 0.5    # The time in seconds between each step of the sequence
 SWEEP_EXTENT = 70.0     # How far from zero to move the servo when sweeping
 
 # Do a sine sweep
-for j in range(SWEEPS):
+for _j in range(SWEEPS):
     for i in range(360):
         s.value(math.sin(math.radians(i)) * SWEEP_EXTENT)
         time.sleep(0.02)
 
 # Do a stepped sweep
-for j in range(SWEEPS):
-    for i in range(0, STEPS):
+for _j in range(SWEEPS):
+    for i in range(STEPS):
         s.to_percent(i, 0, STEPS, 0.0 - SWEEP_EXTENT, SWEEP_EXTENT)
         time.sleep(STEPS_INTERVAL)
-    for i in range(0, STEPS):
+    for i in range(STEPS):
         s.to_percent(i, STEPS, 0, 0.0 - SWEEP_EXTENT, SWEEP_EXTENT)
         time.sleep(STEPS_INTERVAL)
 

@@ -2,6 +2,7 @@
 
 import time
 import warnings
+from importlib.metadata import PackageNotFoundError, version
 
 import gpiod
 import gpiodevice
@@ -16,7 +17,10 @@ from ioexpander.servo import Servo
 from inventorhatmini.errors import NO_I2C, NO_IOE_MSG
 from inventorhatmini.plasma import DummyPlasma, Plasma
 
-__version__ = '1.0.0'
+try:
+    __version__ = version("inventorhatmini")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 
 # Index Constants
@@ -54,7 +58,7 @@ OUTL = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIV
 OUTH = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.ACTIVE)
 
 
-class InventorHATMini():
+class InventorHATMini:
     # I2C pins
     PI_I2C_SDA_PIN = 2
     PI_I2C_SCL_PIN = 3
@@ -99,6 +103,7 @@ class InventorHATMini():
         """ Initialise inventor hat mini's hardware functions
         """
         self.address = address
+        self.ioe = None
 
         gpiodevice.friendly_errors = True
 
@@ -123,7 +128,7 @@ class InventorHATMini():
             self.leds = DummyPlasma()
 
         if is_pi5:
-            warnings.warn("LEDs are not yet supported on Pi 5.")
+            warnings.warn("LEDs are not yet supported on Pi 5.", stacklevel=2)
 
     def _write_pin(self, pin, state):
         lines, offset = pin
@@ -159,7 +164,8 @@ class InventorHATMini():
         self.ioe.set_mode(self.IOE_CURRENT_SENSES[1], ADC)
 
     def __del__(self):
-        self.ioe.reset()
+        if self.ioe is not None:
+            self.ioe.reset()
 
     def switch_pressed(self):
         return self._read_pin(self._pin_user_sw)

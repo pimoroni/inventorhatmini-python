@@ -1,6 +1,7 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, NUM_SERVOS, LED_SERVO_1
+import time
+
+from inventorhatmini import LED_SERVO_1, NUM_SERVOS, InventorHATMini
 
 """
 An example of applying a wave pattern to a group of servos and the LEDs.

@@ -1,6 +1,8 @@
 import time
+
 import RPi.GPIO as GPIO
-from inventorhatmini import InventorHATMini, NUM_LEDS
+
+from inventorhatmini import NUM_LEDS, InventorHATMini
 
 """
 Control a HC-SR04 style ultrasonic distance sensor using the UART header on InventorHATMini.
@@ -105,7 +107,7 @@ def read_distance(timeout=50, samples=3, offset=190000):
 while not board.switch_pressed():
 
     distance = read_distance()
-    print("Distance is {:.1f} cm".format(distance))
+    print(f"Distance is {distance:.1f} cm")
 
     for i in range(NUM_LEDS):
         if distance >= i * (MAX_LED_DISTANCE / NUM_LEDS):

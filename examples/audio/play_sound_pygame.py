@@ -1,4 +1,5 @@
 import pygame
+
 from inventorhatmini import InventorHATMini
 
 """

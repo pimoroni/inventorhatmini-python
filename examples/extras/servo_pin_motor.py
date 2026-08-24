@@ -1,7 +1,9 @@
-import time
 import math
-from inventorhatmini import InventorHATMini, SERVO_2, SERVO_3
+import time
+
 from ioexpander.common import NORMAL_DIR  # REVERSED_DIR
+
+from inventorhatmini import SERVO_2, SERVO_3, InventorHATMini
 
 """
 Shows how to use Inventor HAT Mini's Servo headers to control an externally connected motor driver.

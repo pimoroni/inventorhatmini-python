@@ -1,7 +1,8 @@
-import time
 import math
 import random
-from inventorhatmini import InventorHATMini, SERVO_1
+import time
+
+from inventorhatmini import SERVO_1, InventorHATMini
 
 """
 An example of how to move a servo smoothly between random positions.
