@@ -104,11 +104,9 @@ while not board.switch_pressed():
         if current_detent < MAX_DETENT:
             detent_change(1)    # Increment to the next detent
 
-    # Is the current angle below the region of this detent?
-    elif capture.degrees < detent_angle - (DETENT_SIZE / 2):
-        # Is there another detent we can move to?
-        if current_detent > MIN_DETENT:
-            detent_change(-1)    # Decrement to the next detent
+    # Is the current angle below the region of this detent, and is there another detent we can move to?
+    elif capture.degrees < detent_angle - (DETENT_SIZE / 2) and current_detent > MIN_DETENT:
+        detent_change(-1)    # Decrement to the next detent
 
     # Calculate the velocity to move the motor closer to the position setpoint
     vel = pos_pid.calculate(capture.degrees, capture.degrees_per_second)

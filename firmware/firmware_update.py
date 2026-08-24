@@ -36,7 +36,7 @@ i2c_dev = SMBus(1)
 
 def i2c_write_bytes(address, start_reg, valuelist):
     assert( len(valuelist) <= I2C_WRITE_MAX_SIZE )
-    msg_w = i2c_msg.write(address, [start_reg] + valuelist)
+    msg_w = i2c_msg.write(address, [start_reg, *valuelist])
     i2c_dev.i2c_rdwr(msg_w)
 
 
@@ -55,7 +55,7 @@ def i2c_read8(address, reg):
     i2c_dev.i2c_rdwr(msg_w)
     msg_r = i2c_msg.read(address, 1)
     i2c_dev.i2c_rdwr(msg_r)
-    return list(msg_r)[0]
+    return next(iter(msg_r))
 
 def i2c_write8(address, reg, value):
     """Write a single (8bit) register to the device."""

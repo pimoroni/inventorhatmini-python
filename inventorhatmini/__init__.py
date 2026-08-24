@@ -58,7 +58,7 @@ OUTL = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.INACTIV
 OUTH = gpiod.LineSettings(direction=Direction.OUTPUT, output_value=Value.ACTIVE)
 
 
-class InventorHATMini():
+class InventorHATMini:
     # I2C pins
     PI_I2C_SDA_PIN = 2
     PI_I2C_SCL_PIN = 3
@@ -128,7 +128,7 @@ class InventorHATMini():
             self.leds = DummyPlasma()
 
         if is_pi5:
-            warnings.warn("LEDs are not yet supported on Pi 5.")
+            warnings.warn("LEDs are not yet supported on Pi 5.", stacklevel=2)
 
     def _write_pin(self, pin, state):
         lines, offset = pin
